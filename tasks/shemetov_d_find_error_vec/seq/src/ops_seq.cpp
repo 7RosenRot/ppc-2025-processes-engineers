@@ -6,7 +6,7 @@ namespace {
 constexpr double kEpsilon = 1e-10;
 }  // namespace
 
-ShemetovDFindErrorVecSEQ::ShemetovDFindErrorVecSEQ(const InType& input) {
+ShemetovDFindErrorVecSEQ::ShemetovDFindErrorVecSEQ(const InType &input) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = input;
   GetOutput() = 0;
@@ -21,7 +21,7 @@ bool ShemetovDFindErrorVecSEQ::PreProcessingImpl() {
 }
 
 bool ShemetovDFindErrorVecSEQ::RunImpl() {
-  const auto& data = GetInput();
+  const auto &data = GetInput();
   const size_t size = data.size();
 
   if (size < 2) {

@@ -7,7 +7,7 @@ namespace shemetov_d_find_error_vec {
 
 class ShemetovDFindErrorVecSEQ : public BaseTask {
  public:
-  explicit ShemetovDFindErrorVecSEQ(const InType& input);
+  explicit ShemetovDFindErrorVecSEQ(const InType &input);
 
   static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
     return ppc::task::TypeOfTask::kSEQ;

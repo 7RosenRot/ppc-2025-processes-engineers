@@ -15,18 +15,18 @@ namespace shemetov_d_find_error_vec {
 class ShemetovDFindErrorVecFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   // Имя теста = строковый тег из TestType
-  static std::string PrintTestParam(const TestType& param) {
+  static std::string PrintTestParam(const TestType &param) {
     return std::get<2>(param);
   }
 
  protected:
   void SetUp() override {
-    const auto& testParams = std::get<static_cast<size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    const auto &testParams = std::get<static_cast<size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
 
     inputData_ = std::get<0>(testParams);
   }
 
-  bool CheckTestOutputData(OutType& output) final {
+  bool CheckTestOutputData(OutType &output) final {
     const double eps = 1e-10;
     int ref = 0;
 

@@ -23,7 +23,7 @@ class ShemetovDFindErrorVecPerfTests : public ppc::util::BaseRunPerfTests<InType
     }
   }
 
-  bool CheckTestOutputData(OutType& output) final {
+  bool CheckTestOutputData(OutType &output) final {
     return output >= 0 && output <= static_cast<OutType>(inputData_.size());
   }
 

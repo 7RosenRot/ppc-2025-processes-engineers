@@ -17,7 +17,7 @@ int ShemetovDFindErrorVecMPI::DetectDrop(double left, double right) noexcept {
   return (left > right + kEpsilon) ? 1 : 0;
 }
 
-ShemetovDFindErrorVecMPI::ShemetovDFindErrorVecMPI(const InType& input) {
+ShemetovDFindErrorVecMPI::ShemetovDFindErrorVecMPI(const InType &input) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = input;
   GetOutput() = 0;
@@ -32,7 +32,7 @@ bool ShemetovDFindErrorVecMPI::PreProcessingImpl() {
 }
 
 bool ShemetovDFindErrorVecMPI::RunImpl() {
-  const auto& data = GetInput();
+  const auto &data = GetInput();
   const int dataSize = static_cast<int>(data.size());
 
   if (dataSize < 2) {

@@ -9,7 +9,7 @@ namespace shemetov_d_find_error_vec {
 
 class ShemetovDFindErrorVecMPI : public BaseTask {
  public:
-  explicit ShemetovDFindErrorVecMPI(const InType& input);
+  explicit ShemetovDFindErrorVecMPI(const InType &input);
 
   static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
     return ppc::task::TypeOfTask::kMPI;
