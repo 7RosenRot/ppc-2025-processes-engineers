@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <utility>
+
 #include "shemetov_d_find_error_vec/common/include/common.hpp"
 #include "shemetov_d_find_error_vec/mpi/include/ops_mpi.hpp"
 #include "shemetov_d_find_error_vec/seq/include/ops_seq.hpp"
