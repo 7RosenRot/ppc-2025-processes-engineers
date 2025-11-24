@@ -6,16 +6,18 @@
 #include <cassert>
 #include <vector>
 
+#include "shemetov_d_find_error_vec/common/include/common.hpp"
+
 namespace shemetov_d_find_error_vec {
 
 namespace {
 
-constexpr double epsilon = 1e-10;
+constexpr double kEpsilon = 1e-10;
 
 }  // namespace
 
 int ShemetovDFindErrorVecMPI::DetectDrop(double left, double right) noexcept {
-  return (left > right + epsilon) ? 1 : 0;
+  return (left > right + kEpsilon) ? 1 : 0;
 }
 
 ShemetovDFindErrorVecMPI::ShemetovDFindErrorVecMPI(const InType &input) {
