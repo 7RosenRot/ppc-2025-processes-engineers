@@ -210,56 +210,56 @@ PPC_NUM_PROC=1,2,4,8,16
 ```cpp
 bool ShemetovDFindErrorVecMPI::RunImpl() {
     const auto& data = GetInput();
-    const int dataSize = static_cast<int>(data.size());
+    const int data_size = static_cast<int>(data.size());
 
-    if (dataSize < 2) {
+    if (data_size < 2) {
         GetOutput() = 0;
         return true;
     }
 
-    int worldRank = 0, worldSize = 1;
-    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
-    MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
+    int world_rank = 0, world_size = 1;
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
-    if (dataSize <= worldSize) {
-        int localResult = 0;
-        if (worldRank == 0) {
-            for (int i = 0; i < dataSize - 1; i += 1) {
-                localResult += DetectDrop(data[i], data[i + 1]);
+    if (data_size <= world_size) {
+        int local_result = 0;
+        if (world_rank == 0) {
+            for (int i = 0; i < data_size - 1; i += 1) {
+                local_result += DetectDrop(data[i], data[i + 1]);
             }
         }
-        MPI_Bcast(&localResult, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        GetOutput() = localResult;
+        MPI_Bcast(&local_result, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        GetOutput() = local_result;
         return true;
     }
 
-    const int baseChunk = dataSize / worldSize;
-    const int extraChunk = dataSize % worldSize;
-    const int begin = worldRank * baseChunk + std::min(worldRank, extraChunk);
-    const int count = baseChunk + (worldRank < extraChunk ? 1 : 0);
+    const int base_chunk = data_size / world_size;
+    const int extra_chunk = data_size % world_size;
+    const int begin = world_rank * base_chunk + std::min(world_rank, extra_chunk);
+    const int count = base_chunk + (world_rank < extra_chunk ? 1 : 0);
     const int end = begin + count;
 
-    assert(end <= dataSize);
+    assert(end <= data_size);
 
-    int localViolations = 0;
+    int local_violations = 0;
     for (int i = begin; i + 1 < end; i += 1) {
-        localViolations += DetectDrop(data[i], data[i + 1]);
+        local_violations += DetectDrop(data[i], data[i + 1]);
     }
-    if (worldRank > 0 && begin > 0) {
-        localViolations += DetectDrop(data[begin - 1], data[begin]);
+    if (world_rank > 0 && begin > 0) {
+        local_violations += DetectDrop(data[begin - 1], data[begin]);
     }
 
-    int globalViolations = 0;
+    int global_violations = 0;
     MPI_Allreduce(
-        &localViolations,
-        &globalViolations,
+        &local_violations,
+        &global_violations,
         1,
         MPI_INT,
         MPI_SUM,
         MPI_COMM_WORLD
     );
 
-    GetOutput() = globalViolations;
+    GetOutput() = global_violations;
     return true;
 }
 

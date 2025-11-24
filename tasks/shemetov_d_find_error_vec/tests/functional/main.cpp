@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <array>
-#include <string>
+#include <cstddef>
+#include <tuple>
 #include <vector>
 
 #include "shemetov_d_find_error_vec/common/include/common.hpp"
@@ -21,9 +21,9 @@ class ShemetovDFindErrorVecFuncTests : public ppc::util::BaseRunFuncTests<InType
 
  protected:
   void SetUp() override {
-    const auto &testParams = std::get<static_cast<size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    const auto &test_params = std::get<static_cast<size_t>(ppc::util::GTestParamIndex::ktest_params)>(GetParam());
 
-    inputData_ = std::get<0>(testParams);
+    inputData_ = std::get<0>(test_params);
   }
 
   bool CheckTestOutputData(OutType &output) final {

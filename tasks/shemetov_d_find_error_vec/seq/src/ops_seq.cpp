@@ -3,7 +3,7 @@
 namespace shemetov_d_find_error_vec {
 
 namespace {
-constexpr double kEpsilon = 1e-10;
+constexpr double epsilon = 1e-10;
 }  // namespace
 
 ShemetovDFindErrorVecSEQ::ShemetovDFindErrorVecSEQ(const InType &input) {
@@ -32,7 +32,7 @@ bool ShemetovDFindErrorVecSEQ::RunImpl() {
   int violations = 0;
 
   for (size_t i = 0; i + 1 < size; i += 1) {
-    if (data[i] > data[i + 1] + kEpsilon) {
+    if (data[i] > data[i + 1] + epsilon) {
       violations += 1;
     }
   }

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include "shemetov_d_find_error_vec/common/include/common.hpp"
 #include "task/include/task.hpp"
 

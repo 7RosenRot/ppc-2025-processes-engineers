@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <utility>
+#include <cstddef>
+#include <tuple>
 #include <vector>
 
 #include "shemetov_d_find_error_vec/common/include/common.hpp"
@@ -17,14 +18,14 @@ class ShemetovDFindErrorVecPerfTests : public ppc::util::BaseRunPerfTests<InType
     inputData_.resize(kVectorSize);
 
     for (int i = 0; i < kVectorSize; ++i) {
-      double base = static_cast<double>(i % 1000);
-      double offset = (i & 1) ? -1.0 : 1.0;
+      auto base = static_cast<double>(i % 1000);
+      double offset = ((i & 1) != 0) ? -1.0 : 1.0;
       inputData_[i] = base + offset;
     }
   }
 
   bool CheckTestOutputData(OutType &output) final {
-    return output >= 0 && output <= static_cast<OutType>(inputData_.size());
+    return (output >= 0) && std::cmp_less_equal(output, inputData_.size());
   }
 
   InType GetTestInputData() final {
