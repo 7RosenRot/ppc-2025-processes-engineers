@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
 #include <cstddef>
-#include <utility>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "shemetov_d_find_error_vec/common/include/common.hpp"
