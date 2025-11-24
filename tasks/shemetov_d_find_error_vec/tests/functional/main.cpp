@@ -21,7 +21,7 @@ class ShemetovDFindErrorVecFuncTests : public ppc::util::BaseRunFuncTests<InType
 
  protected:
   void SetUp() override {
-    const auto &test_params = std::get<static_cast<size_t>(ppc::util::GTestParamIndex::ktest_params)>(GetParam());
+    const auto &test_params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
 
     inputData_ = std::get<0>(test_params);
   }
