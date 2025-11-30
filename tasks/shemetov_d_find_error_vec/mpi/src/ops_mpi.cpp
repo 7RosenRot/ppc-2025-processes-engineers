@@ -48,45 +48,40 @@ bool ShemetovDFindErrorVecMPI::RunImpl() {
 
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-  if (data_size <= world_size) {
-    int local_result = 0;
 
-    if (world_rank == 0) {
-      for (int i = 0; i < data_size - 1; i += 1) {
-        local_result += DetectDrop(data[i], data[i + 1]);
-      }
-    }
+  std::vector<int> sendcounts(world_size, 0);
+  std::vector<int> displs(world_size, 0);
 
-    MPI_Bcast(&local_result, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    GetOutput() = local_result;
+  const int base = data_size / world_size;
+  const int extra = data_size % world_size;
 
-    return true;
+  for (int r = 0; r < world_size; ++r) {
+    sendcounts[r] = base + (r < extra ? 1 : 0);
+    displs[r] = (r * base) + std::min(r, extra);
   }
 
-  const int base_chunk = data_size / world_size;
-  const int extra_chunk = data_size % world_size;
+  const int local_size = sendcounts[world_rank];
+  std::vector<double> local_data(local_size);
 
-  const int begin = (world_rank * base_chunk) + std::min(world_rank, extra_chunk);
-
-  const int count = base_chunk + (world_rank < extra_chunk ? 1 : 0);
-
-  const int end = begin + count;
-
-  assert(end <= data_size);
+  MPI_Scatterv(data.data(), sendcounts.data(), displs.data(), MPI_DOUBLE, local_data.data(), local_size, MPI_DOUBLE, 0,
+               MPI_COMM_WORLD);
 
   int local_violations = 0;
 
-  for (int i = begin; i + 1 < end; i += 1) {
-    local_violations += DetectDrop(data[i], data[i + 1]);
+  for (int i = 0; i + 1 < local_size; i++) {
+    local_violations += DetectDrop(local_data[i], local_data[i + 1]);
   }
 
-  if (world_rank > 0 && begin > 0) {
-    local_violations += DetectDrop(data[begin - 1], data[begin]);
+  if (world_rank > 0 && displs[world_rank] > 0) {
+    const double left = data[displs[world_rank] - 1];
+    const double right = local_data[0];
+    local_violations += DetectDrop(left, right);
   }
 
   int global_violations = 0;
 
   MPI_Allreduce(&local_violations, &global_violations, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
   GetOutput() = global_violations;
   return true;
 }
