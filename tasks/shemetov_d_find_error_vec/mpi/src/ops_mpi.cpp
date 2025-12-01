@@ -43,46 +43,43 @@ bool ShemetovDFindErrorVecMPI::RunImpl() {
     return true;
   }
 
-  int world_rank = 0;
-  int world_size = 1;
-
+  int world_rank = 0, world_size = 1;
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
-  std::vector<int> sendcounts(world_size, 0);
-  std::vector<int> displs(world_size, 0);
+  std::vector<int> sendcounts(world_size);
+  std::vector<int> displs(world_size);
 
-  const int base = data_size / world_size;
-  const int extra = data_size % world_size;
+  int base = data_size / world_size;
+  int extra = data_size % world_size;
 
-  for (int r = 0; r < world_size; ++r) {
+  for (int r = 0; r < world_size; r++) {
     sendcounts[r] = base + (r < extra ? 1 : 0);
-    displs[r] = (r * base) + std::min(r, extra);
+    displs[r] = r * base + std::min(r, extra);
   }
 
-  const int local_size = sendcounts[world_rank];
+  int local_size = sendcounts[world_rank];
   std::vector<double> local_data(local_size);
 
   MPI_Scatterv(data.data(), sendcounts.data(), displs.data(), MPI_DOUBLE, local_data.data(), local_size, MPI_DOUBLE, 0,
                MPI_COMM_WORLD);
 
-  int local_violations = 0;
+  int local_viol = 0;
 
   for (int i = 0; i + 1 < local_size; i++) {
-    local_violations += DetectDrop(local_data[i], local_data[i + 1]);
+    local_viol += DetectDrop(local_data[i], local_data[i + 1]);
   }
 
-  if (world_rank > 0 && displs[world_rank] > 0) {
-    const double left = data[displs[world_rank] - 1];
-    const double right = local_data[0];
-    local_violations += DetectDrop(left, right);
+  if (world_rank > 0 && local_size > 0 && displs[world_rank] > 0) {
+    double left = data[displs[world_rank] - 1];
+    double right = local_data[0];
+    local_viol += DetectDrop(left, right);
   }
 
-  int global_violations = 0;
+  int global_viol = 0;
+  MPI_Allreduce(&local_viol, &global_viol, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
-  MPI_Allreduce(&local_violations, &global_violations, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
-  GetOutput() = global_violations;
+  GetOutput() = global_viol;
   return true;
 }
 
