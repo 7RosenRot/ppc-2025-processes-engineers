@@ -43,7 +43,8 @@ bool ShemetovDFindErrorVecMPI::RunImpl() {
     return true;
   }
 
-  int world_rank = 0, world_size = 1;
+  int world_rank = 0;
+  int world_size = 1;
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
@@ -53,9 +54,9 @@ bool ShemetovDFindErrorVecMPI::RunImpl() {
   int base = data_size / world_size;
   int extra = data_size % world_size;
 
-  for (int r = 0; r < world_size; r++) {
-    sendcounts[r] = base + (r < extra ? 1 : 0);
-    displs[r] = r * base + std::min(r, extra);
+  for (int rank_idx = 0; rank_idx < world_size; rank_idx++) {
+    sendcounts[rank_idx] = base + (rank_idx < extra ? 1 : 0);
+    displs[rank_idx] = (rank_idx * base) + std::min(rank_idx, extra);
   }
 
   int local_size = sendcounts[world_rank];
