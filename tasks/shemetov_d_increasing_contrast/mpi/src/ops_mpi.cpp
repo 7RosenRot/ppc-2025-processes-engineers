@@ -37,7 +37,6 @@ bool IncreaseContrastTaskMPI::RunImpl() {
     GetOutput()[i] = static_cast<uint8_t>(std::clamp(tmp, 0, 255));
   }
 
-  // Gather данные с всех процессов на процесс 0
   if (rank != 0) {
     MPI_Send(GetOutput().data() + start, end - start, MPI_UINT8_T, 0, 0, MPI_COMM_WORLD);
   } else {

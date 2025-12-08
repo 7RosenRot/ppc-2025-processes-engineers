@@ -16,7 +16,6 @@ bool IncreaseContrastTaskSEQ::ValidationImpl() {
 }
 
 bool IncreaseContrastTaskSEQ::PreProcessingImpl() {
-  // Для этой задачи предварительная обработка не требуется
   return true;
 }
 
@@ -31,7 +30,6 @@ bool IncreaseContrastTaskSEQ::RunImpl() {
 }
 
 bool IncreaseContrastTaskSEQ::PostProcessingImpl() {
-  // Постобработка не требуется
   return true;
 }
 
