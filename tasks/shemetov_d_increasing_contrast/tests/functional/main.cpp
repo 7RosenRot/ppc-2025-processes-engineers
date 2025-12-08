@@ -17,20 +17,17 @@
 namespace shemetov_d_increasing_contrast {
 
 class IncreaseContrastFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
-  public:
-  static std::string PrintTestParam(const TestType& value) {
-    // TestType = std::tuple<std::string>
-    const std::string& name = std::get<0>(value);
+ public:
+  static std::string PrintTestParam(const TestType &value) {
+    const std::string &name = std::get<0>(value);
 
-    // Убираем запрещённые символы
     std::string sanitized = name;
-    std::replace_if(sanitized.begin(), sanitized.end(),
-                    [](char c){ return !std::isalnum(c); }, '_');
+    std::replace_if(sanitized.begin(), sanitized.end(), [](char c) { return !std::isalnum(c); }, '_');
 
     return sanitized;
   }
- 
-  protected:
+
+ protected:
   void SetUp() override {
     int width = -1, height = -1, channels = -1;
     std::vector<uint8_t> img;

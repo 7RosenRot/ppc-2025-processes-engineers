@@ -8,12 +8,12 @@
 namespace shemetov_d_increasing_contrast {
 
 class IncreaseContrastPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kCount_ = 1000;  // размер данных для теста
+  const int kCount_ = 1000;
   InType input_data_;
   OutType expected_output_;
 
   void SetUp() override {
-    input_data_.resize(kCount_, 128);  // среднее значение пикселя
+    input_data_.resize(kCount_, 128);
     expected_output_.resize(kCount_);
     std::transform(input_data_.begin(), input_data_.end(), expected_output_.begin(),
                    [](uint8_t pixel) { return static_cast<uint8_t>(std::clamp(int(pixel * 1.3f), 0, 255)); });
