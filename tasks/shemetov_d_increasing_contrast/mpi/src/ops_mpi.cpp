@@ -22,56 +22,48 @@ bool IncreaseContrastTaskMPI::PreProcessingImpl() {
 }
 
 bool IncreaseContrastTaskMPI::RunImpl() {
-    int rank, size;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+  int rank, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    const float factor = 1.3f;
+  const float factor = 1.3f;
 
-    const auto &input = GetInput();
-    size_t total = input.size();
+  const auto &input = GetInput();
+  size_t total = input.size();
 
-    // rank 0: prepare sizes
-    size_t chunk = total / size;
-    size_t remainder = total % size;
+  size_t chunk = total / size;
+  size_t remainder = total % size;
 
-    std::vector<int> sendcounts(size);
-    std::vector<int> displs(size);
+  std::vector<int> sendcounts(size);
+  std::vector<int> displs(size);
 
-    for (int r = 0; r < size; ++r) {
-        sendcounts[r] = chunk + (r == size - 1 ? remainder : 0);
-        displs[r] = r * chunk;
-    }
+  for (int r = 0; r < size; ++r) {
+    sendcounts[r] = chunk + (r == size - 1 ? remainder : 0);
+    displs[r] = r * chunk;
+  }
 
-    size_t local_n = sendcounts[rank];
-    std::vector<uint8_t> local_in(local_n);
+  size_t local_n = sendcounts[rank];
+  std::vector<uint8_t> local_in(local_n);
 
-    // scatter
-    MPI_Scatterv(input.data(), sendcounts.data(), displs.data(),
-                 MPI_UINT8_T, local_in.data(), local_n, MPI_UINT8_T,
-                 0, MPI_COMM_WORLD);
+  MPI_Scatterv(input.data(), sendcounts.data(), displs.data(), MPI_UINT8_T, local_in.data(), local_n, MPI_UINT8_T, 0,
+               MPI_COMM_WORLD);
 
-    // local processing
-    std::vector<uint8_t> local_out(local_n);
-    for (size_t i = 0; i < local_n; ++i) {
-        int tmp = int(local_in[i] * factor);
-        local_out[i] = uint8_t(std::clamp(tmp, 0, 255));
-    }
+  std::vector<uint8_t> local_out(local_n);
+  for (size_t i = 0; i < local_n; ++i) {
+    int tmp = int(local_in[i] * factor);
+    local_out[i] = uint8_t(std::clamp(tmp, 0, 255));
+  }
 
-    // rank 0 prepares full output
-    if (rank == 0)
-        GetOutput().assign(total, 0);
-    else
-        GetOutput().clear();     // IMPORTANT for PPC tests!
+  if (rank == 0) {
+    GetOutput().assign(total, 0);
+  } else {
+    GetOutput().clear();
+  }
 
-    // gather
-    MPI_Gatherv(local_out.data(), local_n, MPI_UINT8_T,
-                rank == 0 ? GetOutput().data() : nullptr,
-                sendcounts.data(), displs.data(),
-                MPI_UINT8_T,
-                0, MPI_COMM_WORLD);
+  MPI_Gatherv(local_out.data(), local_n, MPI_UINT8_T, rank == 0 ? GetOutput().data() : nullptr, sendcounts.data(),
+              displs.data(), MPI_UINT8_T, 0, MPI_COMM_WORLD);
 
-    return true;
+  return true;
 }
 
 bool IncreaseContrastTaskMPI::PostProcessingImpl() {
