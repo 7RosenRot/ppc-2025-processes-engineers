@@ -19,16 +19,32 @@ class IncreaseContrastFunctionalTests : public ::testing::Test {
   OutType expected_output_;
 
   void SetUp() override {
+    int rank = 0;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
     int w = 0, h = 0, ch = 0;
+    unsigned char *data = nullptr;
 
     std::string img_path = "tasks/shemetov_d_increasing_contrast/data/pic.jpg";
 
-    unsigned char *data = stbi_load(img_path.c_str(), &w, &h, &ch, STBI_rgb);
-    ASSERT_TRUE(data != nullptr) << "Failed to load image: " << img_path;
+    if (rank == 0) {
+      data = stbi_load(img_path.c_str(), &w, &h, &ch, STBI_rgb);
+      ASSERT_TRUE(data != nullptr) << "Failed to load image: " << img_path;
+    }
 
-    size_t total = static_cast<size_t>(w) * static_cast<size_t>(h) * 3;
-    input_data_.assign(data, data + static_cast<ptrdiff_t>(total));
-    stbi_image_free(data);
+    MPI_Bcast(&w, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&h, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&ch, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    size_t total = static_cast<size_t>(w) * static_cast<size_t>(h) * ch;
+
+    input_data_.resize(total);
+
+    MPI_Bcast(input_data_.data(), total, MPI_UINT8_T, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+      stbi_image_free(data);
+    }
 
     expected_output_.resize(total);
     const float factor = 1.3f;
