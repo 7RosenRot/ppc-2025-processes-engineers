@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 #include <mpi.h>
-#include <cstdint>
+
 #include <cstddef>  // for size_t
+#include <cstdint>
 
 #include "shemetov_d_increasing_contrast/common/include/common.hpp"
 #include "shemetov_d_increasing_contrast/mpi/include/ops_mpi.hpp"

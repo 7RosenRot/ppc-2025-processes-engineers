@@ -8,7 +8,7 @@
 
 namespace shemetov_d_increasing_contrast {
 
-IncreaseContrastTaskMPI::IncreaseContrastTaskMPI(const InType& in) {
+IncreaseContrastTaskMPI::IncreaseContrastTaskMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput().resize(in.size());
@@ -45,10 +45,8 @@ bool IncreaseContrastTaskMPI::RunImpl() {
   std::vector<uint8_t> local_out(counts[rank]);
 
   // MPI_UNSIGNED_CHAR — безопасный тип (есть всегда)
-  MPI_Scatterv(
-      GetInput().data(), counts.data(), displs.data(), MPI_UNSIGNED_CHAR,
-      local_in.data(), counts[rank], MPI_UNSIGNED_CHAR,
-      0, MPI_COMM_WORLD);
+  MPI_Scatterv(GetInput().data(), counts.data(), displs.data(), MPI_UNSIGNED_CHAR, local_in.data(), counts[rank],
+               MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
 
   constexpr float factor = 1.3F;
 
@@ -57,10 +55,8 @@ bool IncreaseContrastTaskMPI::RunImpl() {
     local_out[i] = static_cast<uint8_t>(std::clamp(v, 0, 255));
   }
 
-  MPI_Gatherv(
-      local_out.data(), counts[rank], MPI_UNSIGNED_CHAR,
-      GetOutput().data(), counts.data(), displs.data(),
-      MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
+  MPI_Gatherv(local_out.data(), counts[rank], MPI_UNSIGNED_CHAR, GetOutput().data(), counts.data(), displs.data(),
+              MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
 
   MPI_Barrier(MPI_COMM_WORLD);
   return true;

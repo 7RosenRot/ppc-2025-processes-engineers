@@ -2,8 +2,8 @@
 #include <mpi.h>
 #include <stb/stb_image.h>
 
+#include <cstddef>  // size_t
 #include <cstdint>
-#include <cstddef>    // size_t
 
 #include "shemetov_d_increasing_contrast/common/include/common.hpp"
 #include "shemetov_d_increasing_contrast/mpi/include/ops_mpi.hpp"
@@ -24,7 +24,7 @@ class IncreaseContrastFunctionalTests : public ::testing::Test {
     int h = 0;
     int ch = 0;
 
-    unsigned char* data = nullptr;
+    unsigned char *data = nullptr;
     const std::string imgPath = "tasks/shemetov_d_increasing_contrast/data/pic.jpg";
 
     if (rank == 0) {
@@ -36,17 +36,12 @@ class IncreaseContrastFunctionalTests : public ::testing::Test {
     MPI_Bcast(&h, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&ch, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    const size_t total =
-        static_cast<size_t>(w) * static_cast<size_t>(h) * static_cast<size_t>(ch);
+    const size_t total = static_cast<size_t>(w) * static_cast<size_t>(h) * static_cast<size_t>(ch);
 
     inputData.resize(total);
 
-    MPI_Bcast(
-        reinterpret_cast<unsigned char*>(inputData.data()),
-        static_cast<int>(total),
-        MPI_UNSIGNED_CHAR,
-        0,
-        MPI_COMM_WORLD);
+    MPI_Bcast(reinterpret_cast<unsigned char *>(inputData.data()), static_cast<int>(total), MPI_UNSIGNED_CHAR, 0,
+              MPI_COMM_WORLD);
 
     if (rank == 0) {
       stbi_image_free(data);

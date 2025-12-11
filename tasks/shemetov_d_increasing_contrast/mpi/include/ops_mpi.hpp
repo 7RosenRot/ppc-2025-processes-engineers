@@ -10,7 +10,7 @@ class IncreaseContrastTaskMPI : public BaseTask {
     return ppc::task::TypeOfTask::kMPI;
   }
 
-  explicit IncreaseContrastTaskMPI(const InType& in);
+  explicit IncreaseContrastTaskMPI(const InType &in);
 
  private:
   bool ValidationImpl() override;

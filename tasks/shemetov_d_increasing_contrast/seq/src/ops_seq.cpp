@@ -5,7 +5,7 @@
 
 namespace shemetov_d_increasing_contrast {
 
-IncreaseContrastTaskSEQ::IncreaseContrastTaskSEQ(const InType& in) {
+IncreaseContrastTaskSEQ::IncreaseContrastTaskSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput().resize(in.size());

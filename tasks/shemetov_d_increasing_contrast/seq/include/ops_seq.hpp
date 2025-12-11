@@ -10,7 +10,7 @@ class IncreaseContrastTaskSEQ : public BaseTask {
     return ppc::task::TypeOfTask::kSEQ;
   }
 
-  explicit IncreaseContrastTaskSEQ(const InType& in);
+  explicit IncreaseContrastTaskSEQ(const InType &in);
 
  private:
   bool ValidationImpl() override;
