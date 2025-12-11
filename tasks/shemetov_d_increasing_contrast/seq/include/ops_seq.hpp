@@ -1,7 +1,6 @@
 #pragma once
 
 #include "shemetov_d_increasing_contrast/common/include/common.hpp"
-#include "task/include/task.hpp"
 
 namespace shemetov_d_increasing_contrast {
 
@@ -11,7 +10,7 @@ class IncreaseContrastTaskSEQ : public BaseTask {
     return ppc::task::TypeOfTask::kSEQ;
   }
 
-  explicit IncreaseContrastTaskSEQ(const InType &in);
+  explicit IncreaseContrastTaskSEQ(const InType& in);
 
  private:
   bool ValidationImpl() override;
