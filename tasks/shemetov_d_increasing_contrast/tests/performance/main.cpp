@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
 #include <mpi.h>
 
-#include <cstddef>  // for size_t
+#include <algorithm>
+#include <climits>
 #include <cstdint>
+#include <vector>
 
 #include "shemetov_d_increasing_contrast/common/include/common.hpp"
 #include "shemetov_d_increasing_contrast/mpi/include/ops_mpi.hpp"
@@ -12,47 +14,43 @@ namespace shemetov_d_increasing_contrast {
 
 class IncreaseContrastPerformanceTests : public ::testing::Test {
  protected:
-  InType inputData;
-  OutType expectedOutput;
+  InType input_data;
+  OutType expected_output;
 
   void SetUp() override {
-    constexpr size_t n = 1'000'000;
-    inputData.assign(n, 128);
+    constexpr size_t kNumElements = 1'000'000;
+    input_data.assign(kNumElements, 128);
 
-    expectedOutput.resize(n);
-    constexpr float factor = 1.3F;
-
-    for (size_t i = 0; i < n; ++i) {
-      const int v = static_cast<int>(128 * factor);
-      expectedOutput[i] = static_cast<uint8_t>(std::clamp(v, 0, 255));
+    expected_output.resize(kNumElements);
+    constexpr float kFactor = 1.3F;
+    for (size_t i = 0; i < kNumElements; ++i) {
+      const int v = static_cast<int>(128 * kFactor);
+      expected_output[i] = static_cast<uint8_t>(std::clamp(v, 0, 255));
     }
   }
 };
 
-TEST_F(IncreaseContrastPerformanceTests, SeqPerf) {
-  IncreaseContrastTaskSEQ task(inputData);
-
+TEST_F(IncreaseContrastPerformanceTests, SeqRun) {
+  IncreaseContrastTaskSEQ task(input_data);
   ASSERT_TRUE(task.Validation());
   ASSERT_TRUE(task.PreProcessing());
   ASSERT_TRUE(task.Run());
   ASSERT_TRUE(task.PostProcessing());
-
-  EXPECT_EQ(task.GetOutput(), expectedOutput);
+  EXPECT_EQ(task.GetOutput(), expected_output);
 }
 
-TEST_F(IncreaseContrastPerformanceTests, MpiPerf) {
+TEST_F(IncreaseContrastPerformanceTests, MpiRun) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  IncreaseContrastTaskMPI task(inputData);
-
+  IncreaseContrastTaskMPI task(input_data);
   ASSERT_TRUE(task.Validation());
   ASSERT_TRUE(task.PreProcessing());
   ASSERT_TRUE(task.Run());
   ASSERT_TRUE(task.PostProcessing());
 
   if (rank == 0) {
-    EXPECT_EQ(task.GetOutput(), expectedOutput);
+    EXPECT_EQ(task.GetOutput(), expected_output);
   } else {
     SUCCEED();
   }

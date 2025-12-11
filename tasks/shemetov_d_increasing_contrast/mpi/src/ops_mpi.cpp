@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "shemetov_d_increasing_contrast/common/include/common.hpp"
+
 namespace shemetov_d_increasing_contrast {
 
 IncreaseContrastTaskMPI::IncreaseContrastTaskMPI(const InType &in) {
@@ -44,14 +46,13 @@ bool IncreaseContrastTaskMPI::RunImpl() {
   std::vector<uint8_t> local_in(counts[rank]);
   std::vector<uint8_t> local_out(counts[rank]);
 
-  // MPI_UNSIGNED_CHAR — безопасный тип (есть всегда)
   MPI_Scatterv(GetInput().data(), counts.data(), displs.data(), MPI_UNSIGNED_CHAR, local_in.data(), counts[rank],
                MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
 
-  constexpr float factor = 1.3F;
+  constexpr float kFactor = 1.3F;
 
   for (size_t i = 0; i < local_in.size(); ++i) {
-    const int v = static_cast<int>(local_in[i] * factor);
+    const int v = static_cast<int>(local_in[i] * kFactor);
     local_out[i] = static_cast<uint8_t>(std::clamp(v, 0, 255));
   }
 

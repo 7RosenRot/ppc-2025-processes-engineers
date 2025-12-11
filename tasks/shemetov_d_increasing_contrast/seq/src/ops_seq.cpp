@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cstdint>
 
+#include "shemetov_d_increasing_contrast/common/include/common.hpp"
+
 namespace shemetov_d_increasing_contrast {
 
 IncreaseContrastTaskSEQ::IncreaseContrastTaskSEQ(const InType &in) {
@@ -20,10 +22,10 @@ bool IncreaseContrastTaskSEQ::PreProcessingImpl() {
 }
 
 bool IncreaseContrastTaskSEQ::RunImpl() {
-  constexpr float factor = 1.3F;
+  constexpr float kFactor = 1.3F;
 
   for (size_t i = 0; i < GetInput().size(); ++i) {
-    const int value = static_cast<int>(GetInput()[i] * factor);
+    const int value = static_cast<int>(GetInput()[i] * kFactor);
     GetOutput()[i] = static_cast<uint8_t>(std::clamp(value, 0, 255));
   }
 

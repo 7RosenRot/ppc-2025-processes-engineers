@@ -1,6 +1,7 @@
 #pragma once
 
 #include "shemetov_d_increasing_contrast/common/include/common.hpp"
+#include "task/include/task.hpp"
 
 namespace shemetov_d_increasing_contrast {
 
