@@ -8,7 +8,7 @@ namespace shemetov_d_increasing_contrast {
 IncreaseContrastTaskSEQ::IncreaseContrastTaskSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
-  GetOutput().resize(in.size(), 0);
+  GetOutput().resize(in.size());
 }
 
 bool IncreaseContrastTaskSEQ::ValidationImpl() {
@@ -22,11 +22,12 @@ bool IncreaseContrastTaskSEQ::PreProcessingImpl() {
 bool IncreaseContrastTaskSEQ::RunImpl() {
   const float factor = 1.3f;
 
-  std::transform(GetInput().begin(), GetInput().end(), GetOutput().begin(), [factor](uint8_t pixel) {
-    int tmp = static_cast<int>(pixel * factor);
-    return static_cast<uint8_t>(std::clamp(tmp, 0, 255));
-  });
-  return !GetOutput().empty();
+  for (size_t i = 0; i < GetInput().size(); ++i) {
+    int value = static_cast<int>(GetInput()[i] * factor);
+    GetOutput()[i] = static_cast<uint8_t>(std::clamp(value, 0, 255));
+  }
+
+  return true;
 }
 
 bool IncreaseContrastTaskSEQ::PostProcessingImpl() {

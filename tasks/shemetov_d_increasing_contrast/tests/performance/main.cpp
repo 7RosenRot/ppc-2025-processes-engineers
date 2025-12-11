@@ -1,44 +1,61 @@
 #include <gtest/gtest.h>
+#include <mpi.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <vector>
 
 #include "shemetov_d_increasing_contrast/common/include/common.hpp"
 #include "shemetov_d_increasing_contrast/mpi/include/ops_mpi.hpp"
 #include "shemetov_d_increasing_contrast/seq/include/ops_seq.hpp"
-#include "util/include/perf_test_util.hpp"
 
 namespace shemetov_d_increasing_contrast {
 
-class IncreaseContrastPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kCount_ = 1000;
+class IncreaseContrastPerformanceTests : public ::testing::Test {
+ protected:
   InType input_data_;
   OutType expected_output_;
 
   void SetUp() override {
-    input_data_.resize(kCount_, 128);
-    expected_output_.resize(kCount_);
-    std::transform(input_data_.begin(), input_data_.end(), expected_output_.begin(),
-                   [](uint8_t pixel) { return static_cast<uint8_t>(std::clamp(int(pixel * 1.3f), 0, 255)); });
-  }
+    const size_t N = 1'000'000;
+    input_data_.assign(N, 128);
 
-  bool CheckTestOutputData(OutType &output_data) final {
-    return output_data == expected_output_;
-  }
-
-  InType GetTestInputData() final {
-    return input_data_;
+    expected_output_.resize(N);
+    const float factor = 1.3f;
+    for (size_t i = 0; i < N; ++i) {
+      int v = static_cast<int>(128 * factor);
+      expected_output_[i] = static_cast<uint8_t>(std::clamp(v, 0, 255));
+    }
   }
 };
 
-TEST_P(IncreaseContrastPerfTests, RunPerfModes) {
-  ExecuteTest(GetParam());
+TEST_F(IncreaseContrastPerformanceTests, SEQ_Perf) {
+  IncreaseContrastTaskSEQ task(input_data_);
+
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+  ASSERT_TRUE(task.PostProcessing());
+
+  EXPECT_EQ(task.GetOutput(), expected_output_);
 }
 
-const auto kAllPerfTasks = ppc::util::MakeAllPerfTasks<InType, IncreaseContrastTaskMPI, IncreaseContrastTaskSEQ>(
-    PPC_SETTINGS_shemetov_d_increasing_contrast);
+TEST_F(IncreaseContrastPerformanceTests, MPI_Perf) {
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
+  IncreaseContrastTaskMPI task(input_data_);
 
-const auto kPerfTestName = IncreaseContrastPerfTests::CustomPerfTestName;
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+  ASSERT_TRUE(task.PostProcessing());
 
-INSTANTIATE_TEST_SUITE_P(ContrastPerfTests, IncreaseContrastPerfTests, kGtestValues, kPerfTestName);
+  if (rank == 0) {
+    EXPECT_EQ(task.GetOutput(), expected_output_);
+  } else {
+    SUCCEED();
+  }
+}
 
 }  // namespace shemetov_d_increasing_contrast

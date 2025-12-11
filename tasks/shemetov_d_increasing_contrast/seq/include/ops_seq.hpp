@@ -10,6 +10,7 @@ class IncreaseContrastTaskSEQ : public BaseTask {
   static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
     return ppc::task::TypeOfTask::kSEQ;
   }
+
   explicit IncreaseContrastTaskSEQ(const InType &in);
 
  private:

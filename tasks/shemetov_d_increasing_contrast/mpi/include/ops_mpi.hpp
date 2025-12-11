@@ -10,6 +10,7 @@ class IncreaseContrastTaskMPI : public BaseTask {
   static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
     return ppc::task::TypeOfTask::kMPI;
   }
+
   explicit IncreaseContrastTaskMPI(const InType &in);
 
  private:
