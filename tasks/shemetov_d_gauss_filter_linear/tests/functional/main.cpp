@@ -17,7 +17,13 @@ namespace shemetov_d_gauss_filter_linear {
 class GaussFilterFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
-    return std::get<0>(test_param);
+    std::string name = std::get<0>(test_param);
+    for (auto &c : name) {
+      if (!isalnum(c)) {
+        c = '_';
+      }
+    }
+    return name;
   }
 
  protected:
