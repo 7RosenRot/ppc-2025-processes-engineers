@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <climits>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -48,12 +49,12 @@ class IncreaseContrastFunctionalTests : public ::testing::Test {
       stbi_image_free(data);
     }
 
-    MPI_Bcast(input_data.data(), static_cast<int>(total), MPI_UINT8_T, 0, MPI_COMM_WORLD);
+    MPI_Bcast(input_data.data(), static_cast<int>(total), MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
 
     expected_output.resize(total);
     constexpr float kFactor = 1.3F;
     for (size_t i = 0; i < total; ++i) {
-      const int v = static_cast<int>(input_data[i] * kFactor);
+      const int v = static_cast<int>(static_cast<float>(input_data[i]) * kFactor);
       expected_output[i] = static_cast<uint8_t>(std::clamp(v, 0, 255));
     }
   }
@@ -123,6 +124,63 @@ TEST(IncreaseContrastEdgeCases, MpiZeroAndMax) {
   if (rank == 0) {
     EXPECT_TRUE(
         std::all_of(task_max.GetOutput().begin(), task_max.GetOutput().end(), [](uint8_t v) { return v == 255; }));
+  }
+}
+
+TEST(IncreaseContrastAdditionalTests, SeqEmptyInput) {
+  InType empty;
+  IncreaseContrastTaskSEQ task(empty);
+  EXPECT_FALSE(task.Validation());
+}
+
+TEST(IncreaseContrastAdditionalTests, MpiEmptyInput) {
+  InType empty;
+  IncreaseContrastTaskMPI task(empty);
+  EXPECT_FALSE(task.Validation());
+}
+
+TEST(IncreaseContrastAdditionalTests, SeqSingleElement) {
+  InType data = {128};
+  IncreaseContrastTaskSEQ task(data);
+  ASSERT_TRUE(task.Validation());
+  task.Run();
+  EXPECT_EQ(task.GetOutput()[0], static_cast<uint8_t>(std::clamp(int(128 * 1.3f), 0, 255)));
+}
+
+TEST(IncreaseContrastAdditionalTests, MpiSingleElement) {
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  InType data = {200};
+  IncreaseContrastTaskMPI task(data);
+  ASSERT_TRUE(task.Validation());
+  task.Run();
+
+  if (rank == 0) {
+    EXPECT_EQ(task.GetOutput()[0], static_cast<uint8_t>(std::clamp(int(200 * 1.3f), 0, 255)));
+  } else {
+    SUCCEED();
+  }
+}
+
+TEST(IncreaseContrastAdditionalTests, MpiUnevenSizes) {
+  int rank = 0, size = 1;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+  // size*2 + 1 ensures uneven distribution
+  InType data(size * 2 + 1, 100);
+
+  IncreaseContrastTaskMPI task(data);
+  ASSERT_TRUE(task.Validation());
+  task.Run();
+
+  if (rank == 0) {
+    for (uint8_t v : task.GetOutput()) {
+      EXPECT_EQ(v, static_cast<uint8_t>(std::clamp(int(100 * 1.3f), 0, 255)));
+    }
+  } else {
+    SUCCEED();
   }
 }
 

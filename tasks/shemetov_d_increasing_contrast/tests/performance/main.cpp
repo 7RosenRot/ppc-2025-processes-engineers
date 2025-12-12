@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <climits>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -51,6 +52,30 @@ TEST_F(IncreaseContrastPerformanceTests, MpiRun) {
 
   if (rank == 0) {
     EXPECT_EQ(task.GetOutput(), expected_output);
+  } else {
+    SUCCEED();
+  }
+}
+
+TEST(IncreaseContrastPerformanceAdditionalTests, SeqSmall) {
+  InType data(1000, 50);
+  IncreaseContrastTaskSEQ task(data);
+  task.Validation();
+  task.Run();
+  EXPECT_EQ(task.GetOutput()[0], static_cast<uint8_t>(std::clamp(int(50 * 1.3f), 0, 255)));
+}
+
+TEST(IncreaseContrastPerformanceAdditionalTests, MpiSmall) {
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  InType data(1000, 150);
+  IncreaseContrastTaskMPI task(data);
+  task.Validation();
+  task.Run();
+
+  if (rank == 0) {
+    EXPECT_EQ(task.GetOutput()[0], static_cast<uint8_t>(std::clamp(int(150 * 1.3f), 0, 255)));
   } else {
     SUCCEED();
   }
