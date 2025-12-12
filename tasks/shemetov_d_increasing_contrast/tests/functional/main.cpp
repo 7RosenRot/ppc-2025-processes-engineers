@@ -144,7 +144,7 @@ TEST(IncreaseContrastAdditionalTests, SeqSingleElement) {
   IncreaseContrastTaskSEQ task(data);
   ASSERT_TRUE(task.Validation());
   task.Run();
-  EXPECT_EQ(task.GetOutput()[0], static_cast<uint8_t>(std::clamp(int(128 * 1.3f), 0, 255)));
+  EXPECT_EQ(task.GetOutput()[0], static_cast<uint8_t>(std::clamp(int(128 * 1.3F), 0, 255)));
 }
 
 TEST(IncreaseContrastAdditionalTests, MpiSingleElement) {
@@ -157,7 +157,7 @@ TEST(IncreaseContrastAdditionalTests, MpiSingleElement) {
   task.Run();
 
   if (rank == 0) {
-    EXPECT_EQ(task.GetOutput()[0], static_cast<uint8_t>(std::clamp(int(200 * 1.3f), 0, 255)));
+    EXPECT_EQ(task.GetOutput()[0], static_cast<uint8_t>(std::clamp(int(200 * 1.3F), 0, 255)));
   } else {
     SUCCEED();
   }
@@ -169,7 +169,7 @@ TEST(IncreaseContrastAdditionalTests, MpiUnevenSizes) {
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   // size*2 + 1 ensures uneven distribution
-  InType data(size * 2 + 1, 100);
+  InType data((size * 2) + 1, 100);
 
   IncreaseContrastTaskMPI task(data);
   ASSERT_TRUE(task.Validation());
@@ -177,7 +177,7 @@ TEST(IncreaseContrastAdditionalTests, MpiUnevenSizes) {
 
   if (rank == 0) {
     for (uint8_t v : task.GetOutput()) {
-      EXPECT_EQ(v, static_cast<uint8_t>(std::clamp(int(100 * 1.3f), 0, 255)));
+      EXPECT_EQ(v, static_cast<uint8_t>(std::clamp(int(100 * 1.3F), 0, 255)));
     }
   } else {
     SUCCEED();

@@ -62,7 +62,7 @@ TEST(IncreaseContrastPerformanceAdditionalTests, SeqSmall) {
   IncreaseContrastTaskSEQ task(data);
   task.Validation();
   task.Run();
-  EXPECT_EQ(task.GetOutput()[0], static_cast<uint8_t>(std::clamp(int(50 * 1.3f), 0, 255)));
+  EXPECT_EQ(task.GetOutput()[0], static_cast<uint8_t>(std::clamp(int(50 * 1.3F), 0, 255)));
 }
 
 TEST(IncreaseContrastPerformanceAdditionalTests, MpiSmall) {
@@ -75,7 +75,7 @@ TEST(IncreaseContrastPerformanceAdditionalTests, MpiSmall) {
   task.Run();
 
   if (rank == 0) {
-    EXPECT_EQ(task.GetOutput()[0], static_cast<uint8_t>(std::clamp(int(150 * 1.3f), 0, 255)));
+    EXPECT_EQ(task.GetOutput()[0], static_cast<uint8_t>(std::clamp(int(150 * 1.3F), 0, 255)));
   } else {
     SUCCEED();
   }
