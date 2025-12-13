@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "shemetov_d_gauss_filter_linear/common/include/common.hpp"
+
 namespace shemetov_d_gauss_filter_linear {
 
 GaussFilterMPI::GaussFilterMPI(const InType &in) {
@@ -22,7 +24,8 @@ bool GaussFilterMPI::PreProcessingImpl() {
 }
 
 bool GaussFilterMPI::RunImpl() {
-  int rank, size;
+  int rank = 0;
+  int size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -40,17 +43,26 @@ bool GaussFilterMPI::RunImpl() {
 
   for (int i = std::max(1, start_row); i < std::min(end_row - 1, height - 1); i++) {
     for (int j = 1; j < width - 1; j++) {
-      float sum = 0.f;
+      float sum = 0.0F;
       for (int ki = -1; ki <= 1; ki++) {
         for (int kj = -1; kj <= 1; kj++) {
           sum += kernel[ki + 1][kj + 1] * in[i + ki][j + kj];
         }
       }
-      out[i][j] = static_cast<uint8_t>(std::clamp(sum, 0.f, 255.f));
+      out[i][j] = static_cast<uint8_t>(std::clamp(sum, 0.0F, 255.0f));
     }
   }
 
   MPI_Allreduce(MPI_IN_PLACE, out.data()->data(), height * width, MPI_UINT8_T, MPI_MAX, MPI_COMM_WORLD);
+
+  for (int i = 0; i < height; ++i) {
+    for (int j = 0; j < width; ++j) {
+      uint8_t px = out[i][j];
+      if (px > 255) {
+        return false;
+      }
+    }
+  }
 
   return true;
 }

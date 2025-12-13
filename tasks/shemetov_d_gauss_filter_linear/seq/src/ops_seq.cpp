@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "shemetov_d_gauss_filter_linear/common/include/common.hpp"
+
 namespace shemetov_d_gauss_filter_linear {
 
 GaussFilterSEQ::GaussFilterSEQ(const InType &in) {
@@ -30,13 +32,22 @@ bool GaussFilterSEQ::RunImpl() {
 
   for (int i = 1; i < height - 1; i++) {
     for (int j = 1; j < width - 1; j++) {
-      float sum = 0.f;
+      float sum = 0.0F;
       for (int ki = -1; ki <= 1; ki++) {
         for (int kj = -1; kj <= 1; kj++) {
           sum += kernel[ki + 1][kj + 1] * in[i + ki][j + kj];
         }
       }
-      out[i][j] = static_cast<uint8_t>(std::clamp(sum, 0.f, 255.f));
+      out[i][j] = static_cast<uint8_t>(std::clamp(sum, 0.0F, 255.0f));
+    }
+  }
+
+  for (int i = 0; i < height; ++i) {
+    for (int j = 0; j < width; ++j) {
+      uint8_t px = out[i][j];
+      if (px > 255) {
+        return false;
+      }
     }
   }
 

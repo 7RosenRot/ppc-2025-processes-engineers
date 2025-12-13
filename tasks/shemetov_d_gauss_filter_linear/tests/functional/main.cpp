@@ -30,7 +30,9 @@ class GaussFilterFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType,
   void SetUp() override {
     const std::string img_path = "tasks/shemetov_d_increasing_contrast/data/pic.jpg";
 
-    int width = -1, height = -1, channels = -1;
+    int width = -1;
+    int height = -1;
+    int channels = -1;
     uint8_t *data = stbi_load(img_path.c_str(), &width, &height, &channels, STBI_rgb);
     if (!data) {
       throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
