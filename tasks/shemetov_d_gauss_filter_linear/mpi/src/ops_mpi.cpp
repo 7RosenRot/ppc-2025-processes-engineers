@@ -31,36 +31,37 @@ bool GaussFilterMPI::RunImpl() {
 
   const auto &in = GetInput();
   auto &out = GetOutput();
-  int height = static_cast<int>(in.size());
-  int width = static_cast<int>(in[0].size());
+  const int height = static_cast<int>(in.size());
+  const int width = static_cast<int>(in[0].size());
 
   const std::vector<std::vector<float>> kernel = {
       {1.f / 16, 2.f / 16, 1.f / 16}, {2.f / 16, 4.f / 16, 2.f / 16}, {1.f / 16, 2.f / 16, 1.f / 16}};
 
-  int block_size = height / size;
-  int start_row = rank * block_size;
-  int end_row = (rank == size - 1) ? height : start_row + block_size;
+  const int block_size = height / size;
+  const int start_row = rank * block_size;
+  const int end_row = (rank == size - 1) ? height : start_row + block_size;
 
-  for (int i = std::max(1, start_row); i < std::min(end_row - 1, height - 1); i++) {
-    for (int j = 1; j < width - 1; j++) {
-      float sum = 0.0F;
-      for (int ki = -1; ki <= 1; ki++) {
-        for (int kj = -1; kj <= 1; kj++) {
+  std::vector<uint8_t> local_out(height * width, 0);
+
+  for (int i = std::max(1, start_row); i < std::min(end_row - 1, height - 1); ++i) {
+    for (int j = 1; j < width - 1; ++j) {
+      float sum = 0.f;
+      for (int ki = -1; ki <= 1; ++ki) {
+        for (int kj = -1; kj <= 1; ++kj) {
           sum += kernel[ki + 1][kj + 1] * in[i + ki][j + kj];
         }
       }
-      out[i][j] = static_cast<uint8_t>(std::clamp(sum, 0.0F, 255.0f));
+      local_out[i * width + j] = static_cast<uint8_t>(std::clamp(sum, 0.f, 255.f));
     }
   }
 
-  MPI_Allreduce(MPI_IN_PLACE, out.data()->data(), height * width, MPI_UINT8_T, MPI_MAX, MPI_COMM_WORLD);
+  std::vector<uint8_t> global_out(height * width, 0);
+
+  MPI_Allreduce(local_out.data(), global_out.data(), height * width, MPI_UINT8_T, MPI_MAX, MPI_COMM_WORLD);
 
   for (int i = 0; i < height; ++i) {
     for (int j = 0; j < width; ++j) {
-      uint8_t px = out[i][j];
-      if (px > 255) {
-        return false;
-      }
+      out[i][j] = global_out[i * width + j];
     }
   }
 

@@ -28,7 +28,7 @@ class GaussFilterFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType,
 
  protected:
   void SetUp() override {
-    const std::string img_path = "tasks/shemetov_d_increasing_contrast/data/pic.jpg";
+    const std::string img_path = "tasks/shemetov_d_gauss_filter_linear/data/pic.jpg";
 
     int width = -1;
     int height = -1;
@@ -65,6 +65,44 @@ namespace {
 
 TEST_P(GaussFilterFuncTests, ApplyFilter) {
   ExecuteTest(GetParam());
+}
+
+TEST(GaussFilterExtraFuncTests, SmallSyntheticImageSEQ) {
+  InType input(5, std::vector<uint8_t>(5, 10));
+  input[2][2] = 200;
+
+  GaussFilterSEQ task(input);
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+  ASSERT_TRUE(task.PostProcessing());
+
+  const auto &out = task.GetOutput();
+
+  for (int i = 0; i < 5; ++i) {
+    for (int j = 0; j < 5; ++j) {
+      EXPECT_LE(out[i][j], 255);
+    }
+  }
+}
+
+TEST(GaussFilterExtraFuncTests, SmallSyntheticImageMPI) {
+  InType input(5, std::vector<uint8_t>(5, 10));
+  input[2][2] = 200;
+
+  GaussFilterMPI task(input);
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+  ASSERT_TRUE(task.PostProcessing());
+
+  const auto &out = task.GetOutput();
+
+  for (int i = 0; i < 5; ++i) {
+    for (int j = 0; j < 5; ++j) {
+      EXPECT_LE(out[i][j], 255);
+    }
+  }
 }
 
 const std::array<TestType, 1> kTestParam = {std::make_tuple("pic.jpg")};

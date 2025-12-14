@@ -30,6 +30,29 @@ TEST_P(GaussFilterPerfTest, RunPerfModes) {
   ExecuteTest(GetParam());
 }
 
+TEST(GaussFilterPerfExtraTest, SmallMatrixSEQ) {
+  InType input(8, std::vector<uint8_t>(8, 100));
+  input[4][4] = 255;
+
+  GaussFilterSEQ task(input);
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+  ASSERT_TRUE(task.PostProcessing());
+}
+
+TEST(GaussFilterPerfExtraTest, SmallMatrixMPI) {
+  const int size = 32;
+  InType input(size, std::vector<uint8_t>(size, 100));
+  input[size / 2][size / 2] = 255;
+
+  GaussFilterMPI task(input);
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+  ASSERT_TRUE(task.PostProcessing());
+}
+
 const auto kAllPerfTasks =
     ppc::util::MakeAllPerfTasks<InType, GaussFilterMPI, GaussFilterSEQ>(PPC_SETTINGS_shemetov_d_gauss_filter_linear);
 
