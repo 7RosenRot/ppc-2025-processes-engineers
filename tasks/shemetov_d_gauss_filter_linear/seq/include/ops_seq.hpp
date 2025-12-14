@@ -11,6 +11,7 @@ class GaussFilterSEQ : public BaseTask {
   }
 
   explicit GaussFilterSEQ(const InType &in);
+  float ApplyKernel(const InType &in, int i, int j, const std::vector<std::vector<float>> &kernel);
 
  private:
   bool ValidationImpl() override;

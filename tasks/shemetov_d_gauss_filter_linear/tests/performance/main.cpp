@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
 
+#include <cstddef>
+#include <vector>
+
 #include "shemetov_d_gauss_filter_linear/common/include/common.hpp"
 #include "shemetov_d_gauss_filter_linear/mpi/include/ops_mpi.hpp"
 #include "shemetov_d_gauss_filter_linear/seq/include/ops_seq.hpp"
