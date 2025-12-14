@@ -43,16 +43,11 @@ bool GaussFilterSEQ::RunImpl() {
 
   for (int i = 1; i < height - 1; i++) {
     for (int j = 1; j < width - 1; j++) {
-      out[i][j] = static_cast<uint8_t>(std::clamp(ApplyKernel(in, i, j, kernel), 0.F, 255.F));
-    }
-  }
-
-  for (int i = 0; i < height; ++i) {
-    for (int j = 0; j < width; ++j) {
-      uint8_t px = out[i][j];
-      if (px > 255) {
+      float val = ApplyKernel(in, i, j, kernel);
+      if (val < 0.F || val > 255.F) {
         return false;
       }
+      out[i][j] = static_cast<uint8_t>(std::clamp(val, 0.F, 255.F));
     }
   }
 
