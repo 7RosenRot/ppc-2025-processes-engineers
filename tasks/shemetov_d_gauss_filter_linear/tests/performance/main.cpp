@@ -45,7 +45,7 @@ TEST(GaussFilterPerfExtraTest, SmallMatrixSEQ) {
 }
 
 TEST(GaussFilterPerfExtraTest, SmallMatrixMPI) {
-  const int size = 32;
+  const int size = 64;
   InType input(size, std::vector<uint8_t>(size, 100));
   input[size / 2][size / 2] = 255;
 
