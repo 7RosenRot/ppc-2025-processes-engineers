@@ -13,7 +13,7 @@ namespace shemetov_d_gauss_filter_linear {
 class GaussFilterPerfTest : public ppc::util::BaseRunPerfTests<InType, OutType> {
  protected:
   void SetUp() override {
-    const int size = 512;
+    const int size = 1024;
     input_data_.resize(size, std::vector<uint8_t>(size, 128));
   }
 
@@ -34,8 +34,9 @@ TEST_P(GaussFilterPerfTest, RunPerfModes) {
 }
 
 TEST(GaussFilterPerfExtraTest, SmallMatrixSEQ) {
-  InType input(8, std::vector<uint8_t>(8, 100));
-  input[4][4] = 255;
+  const int size = 1024;
+  InType input(size, std::vector<uint8_t>(size, 100));
+  input[size / 2][size / 2] = 255;
 
   GaussFilterSEQ task(input);
   ASSERT_TRUE(task.Validation());
@@ -45,7 +46,7 @@ TEST(GaussFilterPerfExtraTest, SmallMatrixSEQ) {
 }
 
 TEST(GaussFilterPerfExtraTest, SmallMatrixMPI) {
-  const int size = 512;
+  const int size = 1024;
   InType input(size, std::vector<uint8_t>(size, 100));
   input[size / 2][size / 2] = 255;
 
