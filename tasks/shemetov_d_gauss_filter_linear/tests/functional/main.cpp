@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cctype>
+#include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
@@ -36,7 +37,7 @@ class GaussFilterFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType,
     int height = -1;
     int channels = -1;
     uint8_t *data = stbi_load(img_path.c_str(), &width, &height, &channels, STBI_rgb);
-    if (!data) {
+    if (data == nullptr) {
       throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
     }
     channels = STBI_rgb;

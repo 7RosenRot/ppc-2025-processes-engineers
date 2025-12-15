@@ -63,8 +63,7 @@ bool GaussFilterMPI::RunImpl() {
 
   std::vector<uint8_t> global_out(img_size, 0);
 
-  MPI_Allreduce(local_out.data(), global_out.data(), static_cast<int>(size), MPI_UNSIGNED_CHAR, MPI_MAX,
-                MPI_COMM_WORLD);
+  MPI_Allreduce(local_out.data(), global_out.data(), size, MPI_UNSIGNED_CHAR, MPI_MAX, MPI_COMM_WORLD);
 
   for (int i = 0; i < height; ++i) {
     for (int j = 0; j < width; ++j) {

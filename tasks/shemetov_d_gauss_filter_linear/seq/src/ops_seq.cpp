@@ -1,6 +1,7 @@
 #include "shemetov_d_gauss_filter_linear/seq/include/ops_seq.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 

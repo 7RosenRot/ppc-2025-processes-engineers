@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <cstddef>
+#include <cstdint>
 #include <vector>
 
 #include "shemetov_d_gauss_filter_linear/common/include/common.hpp"
