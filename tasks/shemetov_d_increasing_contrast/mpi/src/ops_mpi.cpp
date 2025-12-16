@@ -22,6 +22,7 @@ bool IncreaseContrastTaskMPI::ValidationImpl() {
 }
 
 bool IncreaseContrastTaskMPI::PreProcessingImpl() {
+  GetOutput().resize(GetInput().size());
   return true;
 }
 
@@ -65,7 +66,7 @@ bool IncreaseContrastTaskMPI::RunImpl() {
 }
 
 bool IncreaseContrastTaskMPI::PostProcessingImpl() {
-  return true;
+  return !GetOutput().empty();
 }
 
 }  // namespace shemetov_d_increasing_contrast

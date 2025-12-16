@@ -19,6 +19,7 @@ bool IncreaseContrastTaskSEQ::ValidationImpl() {
 }
 
 bool IncreaseContrastTaskSEQ::PreProcessingImpl() {
+  GetOutput().resize(GetInput().size());
   return true;
 }
 
@@ -34,7 +35,7 @@ bool IncreaseContrastTaskSEQ::RunImpl() {
 }
 
 bool IncreaseContrastTaskSEQ::PostProcessingImpl() {
-  return true;
+  return !GetOutput().empty();
 }
 
 }  // namespace shemetov_d_increasing_contrast

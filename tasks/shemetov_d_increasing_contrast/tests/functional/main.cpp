@@ -3,7 +3,6 @@
 #include <stb/stb_image.h>
 
 #include <algorithm>
-#include <climits>
 #include <cstddef>
 #include <cstdint>
 #include <string>
