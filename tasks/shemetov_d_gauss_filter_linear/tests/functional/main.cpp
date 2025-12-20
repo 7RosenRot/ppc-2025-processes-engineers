@@ -36,7 +36,12 @@ class ShemetovDGaussFilterFunctionalTests : public ppc::util::BaseRunFuncTests<I
     std::vector<uint8_t> image(data, data + static_cast<ptrdiff_t>(width * height * 3));
     stbi_image_free(data);
 
-    input_data.assign(height, std::vector<Pixel>(width));
+    input_data.clear();
+    input_data.reserve(height);
+    for (int i = 0; i < height; ++i) {
+      input_data.emplace_back(width);
+    }
+
     for (int i = 0; i < height; ++i) {
       for (int j = 0; j < width; ++j) {
         const auto input_idx = static_cast<size_t>((i * width) + j) * 3;
