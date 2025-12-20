@@ -10,9 +10,9 @@
 namespace shemetov_d_gauss_filter_linear {
 
 struct Pixel {
-  uint8_t chennel_red;
-  uint8_t chennel_green;
-  uint8_t chennel_blue;
+  uint8_t channel_red;
+  uint8_t channel_green;
+  uint8_t channel_blue;
 };
 
 using InType = std::vector<std::vector<Pixel>>;

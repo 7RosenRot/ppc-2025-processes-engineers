@@ -18,7 +18,7 @@ class ShemetovDGaussFilterPerformanceTests : public ppc::util::BaseRunPerfTests<
   void SetUp() override {
     const int size = 1024;
 
-    Pixel m_pixel = {.chennel_red = 128, .chennel_green = 128, .chennel_blue = 128};
+    Pixel m_pixel = {.channel_red = 128, .channel_green = 128, .channel_blue = 128};
 
     input_data.assign(size, std::vector<Pixel>(size, m_pixel));
   }
@@ -85,7 +85,7 @@ TEST_F(ShemetovDGaussFilterPerformanceTests, MpiRunOnly) {
 }
 
 TEST(ShemetovDGaussFilterPerformanceExtraTests, SeqSmallData) {
-  Pixel m_pixel = {.chennel_red = 50, .chennel_green = 50, .chennel_blue = 50};
+  Pixel m_pixel = {.channel_red = 50, .channel_green = 50, .channel_blue = 50};
 
   InType data(10, std::vector<Pixel>(10, m_pixel));
 
@@ -100,7 +100,7 @@ TEST(ShemetovDGaussFilterPerformanceExtraTests, MpiSmallData) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  Pixel m_pixel = {.chennel_red = 50, .chennel_green = 50, .chennel_blue = 50};
+  Pixel m_pixel = {.channel_red = 50, .channel_green = 50, .channel_blue = 50};
 
   InType data(10, std::vector<Pixel>(10, m_pixel));
 
@@ -116,7 +116,7 @@ TEST(ShemetovDGaussFilterPerformanceExtraTests, MpiSmallData) {
 TEST(ShemetovDGaussFilterPerformanceExtraTests, SeqLargeData) {
   const int size = 1024;
 
-  Pixel m_pixel = {.chennel_red = 128, .chennel_green = 128, .chennel_blue = 128};
+  Pixel m_pixel = {.channel_red = 128, .channel_green = 128, .channel_blue = 128};
 
   InType data(size, std::vector<Pixel>(size, m_pixel));
 
@@ -133,7 +133,7 @@ TEST(ShemetovDGaussFilterPerformanceExtraTests, MpiLargeData) {
 
   const int size = 1024;
 
-  Pixel m_pixel = {.chennel_red = 128, .chennel_green = 128, .chennel_blue = 128};
+  Pixel m_pixel = {.channel_red = 128, .channel_green = 128, .channel_blue = 128};
 
   InType data(size, std::vector<Pixel>(size, m_pixel));
 
@@ -149,7 +149,7 @@ TEST(ShemetovDGaussFilterPerformanceExtraTests, MpiLargeData) {
 TEST(ShemetovDGaussFilterPerformanceExtraTests, SeqVariousSizes) {
   std::vector<int> sizes = {16, 64, 128, 512, 1024};
   for (int size : sizes) {
-    Pixel m_pixel = {.chennel_red = 128, .chennel_green = 128, .chennel_blue = 128};
+    Pixel m_pixel = {.channel_red = 128, .channel_green = 128, .channel_blue = 128};
 
     InType data(size, std::vector<Pixel>(size, m_pixel));
 
@@ -167,7 +167,7 @@ TEST(ShemetovDGaussFilterPerformanceExtraTests, MpiVariousSizes) {
 
   std::vector<int> sizes = {16, 64, 128, 512, 1024};
   for (int size : sizes) {
-    Pixel m_pixel = {.chennel_red = 128, .chennel_green = 128, .chennel_blue = 128};
+    Pixel m_pixel = {.channel_red = 128, .channel_green = 128, .channel_blue = 128};
 
     InType data(size, std::vector<Pixel>(size, m_pixel));
 
@@ -182,7 +182,7 @@ TEST(ShemetovDGaussFilterPerformanceExtraTests, MpiVariousSizes) {
 TEST(ShemetovDGaussFilterPerformanceExtraTests, SeqLargeRGB) {
   const int size = 2048;
 
-  Pixel m_pixel = {.chennel_red = 128, .chennel_green = 128, .chennel_blue = 128};
+  Pixel m_pixel = {.channel_red = 128, .channel_green = 128, .channel_blue = 128};
 
   InType data(size, std::vector<Pixel>(size, m_pixel));
 
@@ -199,7 +199,7 @@ TEST(ShemetovDGaussFilterPerformanceExtraTests, MpiLargeRGB) {
 
   const int size = 2048;
 
-  Pixel m_pixel = {.chennel_red = 128, .chennel_green = 128, .chennel_blue = 128};
+  Pixel m_pixel = {.channel_red = 128, .channel_green = 128, .channel_blue = 128};
 
   InType data(size, std::vector<Pixel>(size, m_pixel));
 

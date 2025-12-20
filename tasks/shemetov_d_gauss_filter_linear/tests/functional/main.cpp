@@ -27,39 +27,23 @@ class ShemetovDGaussFilterFunctionalTests : public ppc::util::BaseRunFuncTests<I
   int image_size = 0;
 
   void SetUp() override {
-    int rank = 0;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
     const auto &test_param = std::get<static_cast<size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
     const std::string image_path = std::get<1>(test_param);
 
-    std::vector<uint8_t> image;
-    uint8_t *data = nullptr;
+    uint8_t *data = stbi_load(image_path.c_str(), &width, &height, &channels, 3);
+    ASSERT_TRUE(static_cast<bool>(data != nullptr)) << "Failed to load image: " << image_path;
 
-    if (rank == 0) {
-      data = stbi_load(image_path.c_str(), &width, &height, &channels, 3);
-      ASSERT_TRUE(static_cast<bool>(data != nullptr)) << "Failed to load image: " << image_path;
-
-      image.assign(data, data + static_cast<ptrdiff_t>(width * height * 3));
-      stbi_image_free(data);
-    }
-
-    MPI_Bcast(&width, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&height, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&channels, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-    image_size = width * height * channels;
-    image.resize(image_size);
-    MPI_Bcast(image.data(), static_cast<int>(image.size()), MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
+    std::vector<uint8_t> image(data, data + static_cast<ptrdiff_t>(width * height * 3));
+    stbi_image_free(data);
 
     input_data.assign(height, std::vector<Pixel>(width));
     for (int i = 0; i < height; ++i) {
       for (int j = 0; j < width; ++j) {
         const auto input_idx = static_cast<size_t>((i * width) + j) * 3;
 
-        input_data[i][j] = {.chennel_red = image[input_idx],
-                            .chennel_green = image[input_idx + 1],
-                            .chennel_blue = image[input_idx + 2]};
+        input_data[i][j] = {.channel_red = image[input_idx],
+                            .channel_green = image[input_idx + 1],
+                            .channel_blue = image[input_idx + 2]};
       }
     }
   }
@@ -89,11 +73,11 @@ class ShemetovDGaussFilterFunctionalTests : public ppc::util::BaseRunFuncTests<I
 };
 
 TEST(ShemetovDGaussFilterFunctionalExtraTests, SmallSyntheticSEQ) {
-  Pixel m_pixel = {.chennel_red = 10, .chennel_green = 10, .chennel_blue = 10};
+  Pixel m_pixel = {.channel_red = 10, .channel_green = 10, .channel_blue = 10};
 
   InType input(5, std::vector<Pixel>(5, m_pixel));
 
-  input[2][2] = {.chennel_red = 200, .chennel_green = 200, .chennel_blue = 200};
+  input[2][2] = {.channel_red = 200, .channel_green = 200, .channel_blue = 200};
 
   GaussFilterSEQ task(input);
   ASSERT_TRUE(task.Validation());
@@ -106,11 +90,11 @@ TEST(ShemetovDGaussFilterFunctionalExtraTests, SmallSyntheticMPI) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  Pixel m_pixel = {.chennel_red = 10, .chennel_green = 10, .chennel_blue = 10};
+  Pixel m_pixel = {.channel_red = 10, .channel_green = 10, .channel_blue = 10};
 
   InType input(5, std::vector<Pixel>(5, m_pixel));
 
-  input[2][2] = {.chennel_red = 200, .chennel_green = 200, .chennel_blue = 200};
+  input[2][2] = {.channel_red = 200, .channel_green = 200, .channel_blue = 200};
 
   GaussFilterMPI task(input);
   ASSERT_TRUE(task.Validation());
@@ -125,7 +109,7 @@ TEST(ShemetovDGaussFilterFunctionalExtraTests, SmallestRGBImageMPI) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  Pixel m_pixel = {.chennel_red = 100, .chennel_green = 150, .chennel_blue = 200};
+  Pixel m_pixel = {.channel_red = 100, .channel_green = 150, .channel_blue = 200};
 
   InType input(3, std::vector<Pixel>(3, m_pixel));
 
@@ -138,8 +122,8 @@ TEST(ShemetovDGaussFilterFunctionalExtraTests, SmallestRGBImageMPI) {
   if (rank == 0) {
     for (int i = 0; i < 3; ++i) {
       for (int j = 0; j < 3; ++j) {
-        EXPECT_GE(task.GetOutput()[i][j].chennel_red, 0);
-        EXPECT_LE(task.GetOutput()[i][j].chennel_red, 255);
+        EXPECT_GE(task.GetOutput()[i][j].channel_red, 0);
+        EXPECT_LE(task.GetOutput()[i][j].channel_red, 255);
       }
     }
   }
@@ -149,7 +133,7 @@ TEST(ShemetovDGaussFilterFunctionalExtraTests, SinglePixelMPI) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  Pixel m_pixel = {.chennel_red = 50, .chennel_green = 75, .chennel_blue = 125};
+  Pixel m_pixel = {.channel_red = 50, .channel_green = 75, .channel_blue = 125};
 
   InType input(1, std::vector<Pixel>(1, m_pixel));
 
@@ -161,9 +145,9 @@ TEST(ShemetovDGaussFilterFunctionalExtraTests, SinglePixelMPI) {
 
   if (rank == 0) {
     auto &out = task.GetOutput();
-    EXPECT_EQ(out[0][0].chennel_red, 50);
-    EXPECT_EQ(out[0][0].chennel_green, 75);
-    EXPECT_EQ(out[0][0].chennel_blue, 125);
+    EXPECT_EQ(out[0][0].channel_red, 50);
+    EXPECT_EQ(out[0][0].channel_green, 75);
+    EXPECT_EQ(out[0][0].channel_blue, 125);
   }
 }
 
@@ -179,7 +163,7 @@ TEST(ShemetovDGaussFilterFunctionalExtraTests, GradientImageMPI) {
     const auto value = static_cast<uint8_t>(i * 255 / (height - 1));
 
     for (int j = 0; j < width; ++j) {
-      input[i][j] = {.chennel_red = value, .chennel_green = value, .chennel_blue = value};
+      input[i][j] = {.channel_red = value, .channel_green = value, .channel_blue = value};
     }
   }
 
@@ -191,8 +175,8 @@ TEST(ShemetovDGaussFilterFunctionalExtraTests, GradientImageMPI) {
 
   if (rank == 0) {
     auto &out = task.GetOutput();
-    EXPECT_GE(out[2][2].chennel_red, 0);
-    EXPECT_LE(out[2][2].chennel_red, 255);
+    EXPECT_GE(out[2][2].channel_red, 0);
+    EXPECT_LE(out[2][2].channel_red, 255);
   }
 }
 
@@ -200,12 +184,12 @@ TEST(ShemetovDGaussFilterFunctionalExtraTests, HorizontalWhiteLine) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  Pixel m_pixel = {.chennel_red = 0, .chennel_green = 0, .chennel_blue = 0};
+  Pixel m_pixel = {.channel_red = 0, .channel_green = 0, .channel_blue = 0};
 
   InType input(5, std::vector<Pixel>(5, m_pixel));
 
   for (int j = 0; j < 5; ++j) {
-    input[2][j] = {.chennel_red = 255, .chennel_green = 255, .chennel_blue = 255};
+    input[2][j] = {.channel_red = 255, .channel_green = 255, .channel_blue = 255};
   }
 
   GaussFilterMPI task(input);
@@ -219,12 +203,12 @@ TEST(ShemetovDGaussFilterFunctionalExtraTests, VerticalRedLine) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  Pixel m_pixel = {.chennel_red = 0, .chennel_green = 0, .chennel_blue = 0};
+  Pixel m_pixel = {.channel_red = 0, .channel_green = 0, .channel_blue = 0};
 
   InType input(5, std::vector<Pixel>(5, m_pixel));
 
   for (int i = 0; i < 5; ++i) {
-    input[i][2] = {.chennel_red = 255, .chennel_green = 0, .chennel_blue = 0};
+    input[i][2] = {.channel_red = 255, .channel_green = 0, .channel_blue = 0};
   }
 
   GaussFilterMPI task(input);

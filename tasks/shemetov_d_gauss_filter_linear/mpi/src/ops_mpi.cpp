@@ -19,24 +19,24 @@ GaussFilterMPI::GaussFilterMPI(const InType &in) {
 }
 
 Pixel GaussFilterMPI::ApplyKernel(const InType &in, int i, int j, const std::vector<std::vector<float>> &kernel) {
-  float chennel_red = 0.F;
-  float chennel_green = 0.F;
-  float chennel_blue = 0.F;
+  float channel_red = 0.F;
+  float channel_green = 0.F;
+  float channel_blue = 0.F;
 
   for (int ki = -1; ki <= 1; ++ki) {
     for (int kj = -1; kj <= 1; ++kj) {
       const auto &lnk_pixel = in[i + ki][j + kj];
       float coefficient = kernel[ki + 1][kj + 1];
 
-      chennel_red += coefficient * static_cast<float>(lnk_pixel.chennel_red);
-      chennel_green += coefficient * static_cast<float>(lnk_pixel.chennel_green);
-      chennel_blue += coefficient * static_cast<float>(lnk_pixel.chennel_blue);
+      channel_red += coefficient * static_cast<float>(lnk_pixel.channel_red);
+      channel_green += coefficient * static_cast<float>(lnk_pixel.channel_green);
+      channel_blue += coefficient * static_cast<float>(lnk_pixel.channel_blue);
     }
   }
 
-  Pixel m_pixel = {.chennel_red = static_cast<uint8_t>(std::clamp(chennel_red, 0.F, 255.F)),
-                   .chennel_green = static_cast<uint8_t>(std::clamp(chennel_green, 0.F, 255.F)),
-                   .chennel_blue = static_cast<uint8_t>(std::clamp(chennel_blue, 0.F, 255.F))};
+  Pixel m_pixel = {.channel_red = static_cast<uint8_t>(std::clamp(channel_red, 0.F, 255.F)),
+                   .channel_green = static_cast<uint8_t>(std::clamp(channel_green, 0.F, 255.F)),
+                   .channel_blue = static_cast<uint8_t>(std::clamp(channel_blue, 0.F, 255.F))};
   return m_pixel;
 }
 
@@ -62,9 +62,9 @@ std::vector<uint8_t> GaussFilterMPI::SendColumns(const std::vector<std::vector<P
   std::vector<uint8_t> send_columns(sc_size);
 
   for (size_t i = 0; std::cmp_less(i, local_rows); ++i) {
-    send_columns[(i * 3)] = local_out[i][column].chennel_red;
-    send_columns[(i * 3) + 1] = local_out[i][column].chennel_green;
-    send_columns[(i * 3) + 2] = local_out[i][column].chennel_blue;
+    send_columns[(i * 3)] = local_out[i][column].channel_red;
+    send_columns[(i * 3) + 1] = local_out[i][column].channel_green;
+    send_columns[(i * 3) + 2] = local_out[i][column].channel_blue;
   }
 
   return send_columns;
@@ -73,9 +73,9 @@ std::vector<uint8_t> GaussFilterMPI::SendColumns(const std::vector<std::vector<P
 void GaussFilterMPI::RecieveColumns(std::vector<uint8_t> &recieve_columns, size_t column,
                                     std::vector<std::vector<Pixel>> &out) {
   for (size_t i = 0; std::cmp_less(i, height); ++i) {
-    out[i][column].chennel_red = recieve_columns[(i * 3)];
-    out[i][column].chennel_green = recieve_columns[(i * 3) + 1];
-    out[i][column].chennel_blue = recieve_columns[(i * 3) + 2];
+    out[i][column].channel_red = recieve_columns[(i * 3)];
+    out[i][column].channel_green = recieve_columns[(i * 3) + 1];
+    out[i][column].channel_blue = recieve_columns[(i * 3) + 2];
   }
 }
 
