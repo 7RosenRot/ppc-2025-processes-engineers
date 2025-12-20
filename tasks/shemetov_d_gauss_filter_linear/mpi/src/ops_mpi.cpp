@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 #include "shemetov_d_gauss_filter_linear/common/include/common.hpp"
@@ -17,18 +18,112 @@ GaussFilterMPI::GaussFilterMPI(const InType &in) {
   GetOutput() = in;
 }
 
-float GaussFilterMPI::ApplyKernel(const InType &in, int i, int j, const std::vector<std::vector<float>> &kernel) {
-  float sum = 0.F;
+Pixel GaussFilterMPI::ApplyKernel(const InType &in, int i, int j, const std::vector<std::vector<float>> &kernel) {
+  float chennel_red = 0.F;
+  float chennel_green = 0.F;
+  float chennel_blue = 0.F;
+
   for (int ki = -1; ki <= 1; ++ki) {
     for (int kj = -1; kj <= 1; ++kj) {
-      sum += kernel[ki + 1][kj + 1] * static_cast<float>(in[i + ki][j + kj]);
+      const auto &lnk_pixel = in[i + ki][j + kj];
+      float coefficient = kernel[ki + 1][kj + 1];
+
+      chennel_red += coefficient * static_cast<float>(lnk_pixel.chennel_red);
+      chennel_green += coefficient * static_cast<float>(lnk_pixel.chennel_green);
+      chennel_blue += coefficient * static_cast<float>(lnk_pixel.chennel_blue);
     }
   }
-  return sum;
+
+  Pixel m_pixel = {.chennel_red = static_cast<uint8_t>(std::clamp(chennel_red, 0.F, 255.F)),
+                   .chennel_green = static_cast<uint8_t>(std::clamp(chennel_green, 0.F, 255.F)),
+                   .chennel_blue = static_cast<uint8_t>(std::clamp(chennel_blue, 0.F, 255.F))};
+  return m_pixel;
+}
+
+void GaussFilterMPI::ComputeLocalBlock(const InType &in, int start_row, std::vector<std::vector<Pixel>> &local_out) {
+  const std::vector<std::vector<float>> kernel = {
+      {1.F / 16, 2.F / 16, 1.F / 16}, {2.F / 16, 4.F / 16, 2.F / 16}, {1.F / 16, 2.F / 16, 1.F / 16}};
+
+  for (int i = 0; i < local_rows; ++i) {
+    const int global_row = start_row + i;
+
+    if (global_row == 0 || global_row == height - 1) {
+      continue;
+    }
+
+    for (int j = 1; j < width - 1; ++j) {
+      local_out[static_cast<size_t>(i)][static_cast<size_t>(j)] = ApplyKernel(in, global_row, j, kernel);
+    }
+  }
+}
+
+std::vector<uint8_t> GaussFilterMPI::SendColumns(const std::vector<std::vector<Pixel>> &local_out, size_t column) {
+  const auto sc_size = static_cast<size_t>(local_rows) * 3;
+  std::vector<uint8_t> send_columns(sc_size);
+
+  for (size_t i = 0; std::_Cmp_less(i, local_rows); ++i) {
+    send_columns[(i * 3)] = local_out[i][column].chennel_red;
+    send_columns[(i * 3) + 1] = local_out[i][column].chennel_green;
+    send_columns[(i * 3) + 2] = local_out[i][column].chennel_blue;
+  }
+
+  return send_columns;
+}
+
+void GaussFilterMPI::RecieveColumns(std::vector<uint8_t> &recieve_columns, size_t column,
+                                    std::vector<std::vector<Pixel>> &out) {
+  for (size_t i = 0; std::_Cmp_less(i, height); ++i) {
+    out[i][column].chennel_red = recieve_columns[(i * 3)];
+    out[i][column].chennel_green = recieve_columns[(i * 3) + 1];
+    out[i][column].chennel_blue = recieve_columns[(i * 3) + 2];
+  }
+}
+
+void GaussFilterMPI::GatherResult(const std::vector<std::vector<Pixel>> &local_out, const InType &in,
+                                  std::vector<std::vector<Pixel>> &out) {
+  std::vector<int> string_count(size, 0);
+  for (int rank_idx = 0; rank_idx < size; ++rank_idx) {
+    int distribution = rank_idx < extra_rows ? 1 : 0;
+    string_count[rank_idx] = (base_rows + distribution) * 3;
+  }
+
+  std::vector<int> displacement(size, 0);
+  for (int rank_idx = 1; rank_idx < size; ++rank_idx) {
+    displacement[rank_idx] = displacement[rank_idx - 1] + string_count[rank_idx - 1];
+  }
+
+  for (size_t j = 0; std::_Cmp_less(j, width); ++j) {
+    auto send_columns = SendColumns(local_out, j);
+
+    if (rank == 0) {
+      const auto rc_size = static_cast<size_t>(height) * 3;
+      std::vector<uint8_t> recieve_columns(rc_size);
+
+      MPI_Gatherv(send_columns.data(), local_rows * 3, MPI_UNSIGNED_CHAR, recieve_columns.data(), string_count.data(),
+                  displacement.data(), MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
+
+      RecieveColumns(recieve_columns, j, out);
+    } else {
+      MPI_Gatherv(send_columns.data(), local_rows * 3, MPI_UNSIGNED_CHAR, nullptr, nullptr, nullptr, MPI_UNSIGNED_CHAR,
+                  0, MPI_COMM_WORLD);
+    }
+  }
+
+  if (rank == 0) {
+    for (size_t i = 0; std::_Cmp_less(i, height); ++i) {
+      out[i][0] = in[i][0];
+      out[i][width - 1] = in[i][width - 1];
+    }
+    for (size_t j = 0; std::_Cmp_less(j, width); ++j) {
+      out[0][j] = in[0][j];
+      out[height - 1][j] = in[height - 1][j];
+    }
+  }
 }
 
 bool GaussFilterMPI::ValidationImpl() {
-  return !GetInput().empty() && !GetInput()[0].empty();
+  const auto &in = GetInput();
+  return !in.empty() && !in[0].empty();
 }
 
 bool GaussFilterMPI::PreProcessingImpl() {
@@ -36,41 +131,32 @@ bool GaussFilterMPI::PreProcessingImpl() {
 }
 
 bool GaussFilterMPI::RunImpl() {
-  int rank = 0;
-  int size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   const auto &in = GetInput();
   auto &out = GetOutput();
-  const int height = static_cast<int>(in.size());
-  const int width = static_cast<int>(in[0].size());
 
-  const std::vector<std::vector<float>> kernel = {
-      {1.F / 16, 2.F / 16, 1.F / 16}, {2.F / 16, 4.F / 16, 2.F / 16}, {1.F / 16, 2.F / 16, 1.F / 16}};
+  height = static_cast<int>(in.size());
+  width = static_cast<int>(in[0].size());
 
-  const int block_size = height / size;
-  const int start_row = rank * block_size;
-  const int end_row = (rank == size - 1) ? height : start_row + block_size;
-
-  const auto img_size = static_cast<std::size_t>(height) * static_cast<std::size_t>(width);
-  std::vector<uint8_t> local_out(img_size, 0);
-
-  for (int i = std::max(1, start_row); i < std::min(end_row - 1, height - 1); ++i) {
-    for (int j = 1; j < width - 1; ++j) {
-      local_out[(i * width) + j] = static_cast<uint8_t>(std::clamp(ApplyKernel(in, i, j, kernel), 0.F, 255.F));
-    }
+  if (height < 3 || width < 3) {
+    out = in;
+    return true;
   }
 
-  std::vector<uint8_t> global_out(img_size, 0);
+  base_rows = height / size;
+  extra_rows = height % size;
 
-  MPI_Allreduce(local_out.data(), global_out.data(), size, MPI_UNSIGNED_CHAR, MPI_MAX, MPI_COMM_WORLD);
+  local_rows = base_rows + ((rank < extra_rows) ? 1 : 0);
+  std::vector<std::vector<Pixel>> local_out(static_cast<size_t>(local_rows),
+                                            std::vector<Pixel>(static_cast<size_t>(width)));
 
-  for (int i = 0; i < height; ++i) {
-    for (int j = 0; j < width; ++j) {
-      out[i][j] = global_out[(i * width) + j];
-    }
-  }
+  const int start_row = (rank * base_rows) + std::min(rank, extra_rows);
+
+  ComputeLocalBlock(in, start_row, local_out);
+
+  GatherResult(local_out, in, out);
 
   return true;
 }

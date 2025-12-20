@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
+#include <mpi.h>
 
-#include <cstdint>
+#include <cstddef>
 #include <vector>
 
 #include "shemetov_d_gauss_filter_linear/common/include/common.hpp"
@@ -10,60 +11,205 @@
 
 namespace shemetov_d_gauss_filter_linear {
 
-class GaussFilterPerfTest : public ppc::util::BaseRunPerfTests<InType, OutType> {
+class ShemetovDGaussFilterPerformanceTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
  protected:
+  InType input_data;
+
   void SetUp() override {
     const int size = 1024;
-    input_data_.resize(size, std::vector<uint8_t>(size, 128));
+
+    Pixel m_pixel = {.chennel_red = 128, .chennel_green = 128, .chennel_blue = 128};
+
+    input_data.assign(size, std::vector<Pixel>(size, m_pixel));
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    return !output_data.empty() && output_data.size() == input_data_.size();
+    if (output_data.empty()) {
+      return false;
+    }
+    if (output_data.size() != input_data.size()) {
+      return false;
+    }
+
+    for (size_t i = 0; i < output_data.size(); ++i) {
+      if (output_data[i].size() != input_data[i].size()) {
+        return false;
+      }
+    }
+    return true;
   }
 
   InType GetTestInputData() final {
-    return input_data_;
+    return input_data;
   }
-
- private:
-  InType input_data_;
 };
 
-TEST_P(GaussFilterPerfTest, RunPerfModes) {
-  ExecuteTest(GetParam());
-}
-
-TEST(GaussFilterPerfExtraTest, SmallMatrixSEQ) {
-  const int size = 1024;
-  InType input(size, std::vector<uint8_t>(size, 100));
-  input[size / 2][size / 2] = 255;
-
-  GaussFilterSEQ task(input);
+TEST_F(ShemetovDGaussFilterPerformanceTests, SeqFullCycle) {
+  GaussFilterSEQ task(input_data);
   ASSERT_TRUE(task.Validation());
   ASSERT_TRUE(task.PreProcessing());
   ASSERT_TRUE(task.Run());
   ASSERT_TRUE(task.PostProcessing());
 }
 
-TEST(GaussFilterPerfExtraTest, SmallMatrixMPI) {
-  const int size = 1024;
-  InType input(size, std::vector<uint8_t>(size, 100));
-  input[size / 2][size / 2] = 255;
+TEST_F(ShemetovDGaussFilterPerformanceTests, MpiFullCycle) {
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  GaussFilterMPI task(input);
+  GaussFilterMPI task(input_data);
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+  ASSERT_TRUE(task.PostProcessing());
+
+  SUCCEED();
+}
+
+TEST_F(ShemetovDGaussFilterPerformanceTests, SeqRunOnly) {
+  GaussFilterSEQ task(input_data);
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+}
+
+TEST_F(ShemetovDGaussFilterPerformanceTests, MpiRunOnly) {
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  GaussFilterMPI task(input_data);
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+
+  SUCCEED();
+}
+
+TEST(ShemetovDGaussFilterPerformanceExtraTests, SeqSmallData) {
+  Pixel m_pixel = {.chennel_red = 50, .chennel_green = 50, .chennel_blue = 50};
+
+  InType data(10, std::vector<Pixel>(10, m_pixel));
+
+  GaussFilterSEQ task(data);
   ASSERT_TRUE(task.Validation());
   ASSERT_TRUE(task.PreProcessing());
   ASSERT_TRUE(task.Run());
   ASSERT_TRUE(task.PostProcessing());
 }
 
-const auto kAllPerfTasks =
-    ppc::util::MakeAllPerfTasks<InType, GaussFilterMPI, GaussFilterSEQ>(PPC_SETTINGS_shemetov_d_gauss_filter_linear);
+TEST(ShemetovDGaussFilterPerformanceExtraTests, MpiSmallData) {
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
+  Pixel m_pixel = {.chennel_red = 50, .chennel_green = 50, .chennel_blue = 50};
 
-const auto kPerfTestName = GaussFilterPerfTest::CustomPerfTestName;
+  InType data(10, std::vector<Pixel>(10, m_pixel));
 
-INSTANTIATE_TEST_SUITE_P(RunModeTests, GaussFilterPerfTest, kGtestValues, kPerfTestName);
+  GaussFilterMPI task(data);
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+  ASSERT_TRUE(task.PostProcessing());
+
+  SUCCEED();
+}
+
+TEST(ShemetovDGaussFilterPerformanceExtraTests, SeqLargeData) {
+  const int size = 1024;
+
+  Pixel m_pixel = {.chennel_red = 128, .chennel_green = 128, .chennel_blue = 128};
+
+  InType data(size, std::vector<Pixel>(size, m_pixel));
+
+  GaussFilterSEQ task(data);
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+  ASSERT_TRUE(task.PostProcessing());
+}
+
+TEST(ShemetovDGaussFilterPerformanceExtraTests, MpiLargeData) {
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  const int size = 1024;
+
+  Pixel m_pixel = {.chennel_red = 128, .chennel_green = 128, .chennel_blue = 128};
+
+  InType data(size, std::vector<Pixel>(size, m_pixel));
+
+  GaussFilterMPI task(data);
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+  ASSERT_TRUE(task.PostProcessing());
+
+  SUCCEED();
+}
+
+TEST(ShemetovDGaussFilterPerformanceExtraTests, SeqVariousSizes) {
+  std::vector<int> sizes = {16, 64, 128, 512, 1024};
+  for (int size : sizes) {
+    Pixel m_pixel = {.chennel_red = 128, .chennel_green = 128, .chennel_blue = 128};
+
+    InType data(size, std::vector<Pixel>(size, m_pixel));
+
+    GaussFilterSEQ task(data);
+    ASSERT_TRUE(task.Validation());
+    ASSERT_TRUE(task.PreProcessing());
+    ASSERT_TRUE(task.Run());
+    ASSERT_TRUE(task.PostProcessing());
+  }
+}
+
+TEST(ShemetovDGaussFilterPerformanceExtraTests, MpiVariousSizes) {
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  std::vector<int> sizes = {16, 64, 128, 512, 1024};
+  for (int size : sizes) {
+    Pixel m_pixel = {.chennel_red = 128, .chennel_green = 128, .chennel_blue = 128};
+
+    InType data(size, std::vector<Pixel>(size, m_pixel));
+
+    GaussFilterMPI task(data);
+    ASSERT_TRUE(task.Validation());
+    ASSERT_TRUE(task.PreProcessing());
+    ASSERT_TRUE(task.Run());
+    ASSERT_TRUE(task.PostProcessing());
+  }
+}
+
+TEST(ShemetovDGaussFilterPerformanceExtraTests, SeqLargeRGB) {
+  const int size = 2048;
+
+  Pixel m_pixel = {.chennel_red = 128, .chennel_green = 128, .chennel_blue = 128};
+
+  InType data(size, std::vector<Pixel>(size, m_pixel));
+
+  GaussFilterSEQ task(data);
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+  ASSERT_TRUE(task.PostProcessing());
+}
+
+TEST(ShemetovDGaussFilterPerformanceExtraTests, MpiLargeRGB) {
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  const int size = 2048;
+
+  Pixel m_pixel = {.chennel_red = 128, .chennel_green = 128, .chennel_blue = 128};
+
+  InType data(size, std::vector<Pixel>(size, m_pixel));
+
+  GaussFilterMPI task(data);
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+  ASSERT_TRUE(task.PostProcessing());
+
+  SUCCEED();
+}
 
 }  // namespace shemetov_d_gauss_filter_linear

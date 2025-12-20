@@ -14,18 +14,31 @@ GaussFilterSEQ::GaussFilterSEQ(const InType &in) {
   GetOutput() = in;
 }
 
-float GaussFilterSEQ::ApplyKernel(const InType &in, int i, int j, const std::vector<std::vector<float>> &kernel) {
-  float sum = 0.F;
+Pixel GaussFilterSEQ::ApplyKernel(const InType &in, int i, int j, const std::vector<std::vector<float>> &kernel) {
+  float chennel_red = 0.F;
+  float chennel_green = 0.F;
+  float chennel_blue = 0.F;
+
   for (int ki = -1; ki <= 1; ++ki) {
     for (int kj = -1; kj <= 1; ++kj) {
-      sum += kernel[ki + 1][kj + 1] * static_cast<float>(in[i + ki][j + kj]);
+      const auto &lnk_pixel = in[i + ki][j + kj];
+      float coefficient = kernel[ki + 1][kj + 1];
+
+      chennel_red += coefficient * static_cast<float>(lnk_pixel.chennel_red);
+      chennel_green += coefficient * static_cast<float>(lnk_pixel.chennel_green);
+      chennel_blue += coefficient * static_cast<float>(lnk_pixel.chennel_blue);
     }
   }
-  return sum;
+
+  Pixel m_pixel = {.chennel_red = static_cast<uint8_t>(std::clamp(chennel_red, 0.F, 255.F)),
+                   .chennel_green = static_cast<uint8_t>(std::clamp(chennel_green, 0.F, 255.F)),
+                   .chennel_blue = static_cast<uint8_t>(std::clamp(chennel_blue, 0.F, 255.F))};
+  return m_pixel;
 }
 
 bool GaussFilterSEQ::ValidationImpl() {
-  return !GetInput().empty() && !GetInput()[0].empty();
+  const auto &in = GetInput();
+  return !in.empty() && !in[0].empty();
 }
 
 bool GaussFilterSEQ::PreProcessingImpl() {
@@ -35,19 +48,21 @@ bool GaussFilterSEQ::PreProcessingImpl() {
 bool GaussFilterSEQ::RunImpl() {
   const auto &in = GetInput();
   auto &out = GetOutput();
-  int height = static_cast<int>(in.size());
-  int width = static_cast<int>(in[0].size());
+
+  height = static_cast<int>(in.size());
+  width = static_cast<int>(in[0].size());
+
+  if (height < 3 || width < 3) {
+    out = in;
+    return true;
+  }
 
   const std::vector<std::vector<float>> kernel = {
       {1.F / 16, 2.F / 16, 1.F / 16}, {2.F / 16, 4.F / 16, 2.F / 16}, {1.F / 16, 2.F / 16, 1.F / 16}};
 
   for (int i = 1; i < height - 1; i++) {
     for (int j = 1; j < width - 1; j++) {
-      float val = ApplyKernel(in, i, j, kernel);
-      if (val < 0.F || val > 255.F) {
-        return false;
-      }
-      out[i][j] = static_cast<uint8_t>(std::clamp(val, 0.F, 255.F));
+      out[i][j] = ApplyKernel(in, i, j, kernel);
     }
   }
 

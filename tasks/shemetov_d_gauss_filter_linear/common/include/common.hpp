@@ -9,9 +9,15 @@
 
 namespace shemetov_d_gauss_filter_linear {
 
-using InType = std::vector<std::vector<uint8_t>>;
-using OutType = std::vector<std::vector<uint8_t>>;
-using TestType = std::tuple<std::string>;
+struct Pixel {
+  uint8_t chennel_red;
+  uint8_t chennel_green;
+  uint8_t chennel_blue;
+};
+
+using InType = std::vector<std::vector<Pixel>>;
+using OutType = std::vector<std::vector<Pixel>>;
+using TestType = std::tuple<std::string, std::string>;
 using BaseTask = ppc::task::Task<InType, OutType>;
 
 }  // namespace shemetov_d_gauss_filter_linear

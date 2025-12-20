@@ -13,13 +13,16 @@ class GaussFilterSEQ : public BaseTask {
   }
 
   explicit GaussFilterSEQ(const InType &in);
-  static float ApplyKernel(const InType &in, int i, int j, const std::vector<std::vector<float>> &kernel);
+  static Pixel ApplyKernel(const InType &in, int i, int j, const std::vector<std::vector<float>> &kernel);
 
  private:
   bool ValidationImpl() override;
   bool PreProcessingImpl() override;
   bool RunImpl() override;
   bool PostProcessingImpl() override;
+
+  inline static int width = 0;
+  inline static int height = 0;
 };
 
 }  // namespace shemetov_d_gauss_filter_linear
