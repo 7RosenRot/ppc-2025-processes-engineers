@@ -14,7 +14,7 @@
 
 namespace shemetov_d_increasing_contrast {
 
-class IncreaseContrastFunctionalTests : public ::testing::Test {
+class ShemetovDIncreaseContrastFunctionalTests : public ::testing::Test {
  protected:
   InType input_data;
   OutType expected_output;
@@ -58,7 +58,57 @@ class IncreaseContrastFunctionalTests : public ::testing::Test {
   }
 };
 
-TEST(IncreaseContrastConstructorTests, SeqConstructorInitializesCorrectly) {
+TEST_F(ShemetovDIncreaseContrastFunctionalTests, SeqFullCycle) {
+  IncreaseContrastTaskSEQ task(input_data);
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+  ASSERT_TRUE(task.PostProcessing());
+  EXPECT_EQ(task.GetOutput(), expected_output);
+}
+
+TEST_F(ShemetovDIncreaseContrastFunctionalTests, MpiFullCycle) {
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  IncreaseContrastTaskMPI task(input_data);
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+  ASSERT_TRUE(task.PostProcessing());
+
+  if (rank == 0) {
+    EXPECT_EQ(task.GetOutput(), expected_output);
+  } else {
+    SUCCEED();
+  }
+}
+
+TEST_F(ShemetovDIncreaseContrastFunctionalTests, SeqRunOnly) {
+  IncreaseContrastTaskSEQ task(input_data);
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+}
+
+TEST_F(ShemetovDIncreaseContrastFunctionalTests, MpiRunOnly) {
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  IncreaseContrastTaskMPI task(input_data);
+
+  ASSERT_TRUE(task.Validation());
+  ASSERT_TRUE(task.PreProcessing());
+  ASSERT_TRUE(task.Run());
+
+  if (rank == 0) {
+    EXPECT_EQ(task.GetOutput(), expected_output);
+  } else {
+    SUCCEED();
+  }
+}
+
+TEST(ShemetovDIncreaseContrastConstructorTests, SeqConstructorInitializesCorrectly) {
   InType input = {1, 2, 3, 4, 5};
   IncreaseContrastTaskSEQ task(input);
 
@@ -67,7 +117,7 @@ TEST(IncreaseContrastConstructorTests, SeqConstructorInitializesCorrectly) {
   EXPECT_TRUE(task.Validation());
 }
 
-TEST(IncreaseContrastConstructorTests, MpiConstructorInitializesCorrectly) {
+TEST(ShemetovDIncreaseContrastConstructorTests, MpiConstructorInitializesCorrectly) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -81,7 +131,7 @@ TEST(IncreaseContrastConstructorTests, MpiConstructorInitializesCorrectly) {
   }
 }
 
-TEST(IncreaseContrastProcessingTests, SeqPreProcessingReturnsTrue) {
+TEST(ShemetovDIncreaseContrastProcessingTests, SeqPreProcessingReturnsTrue) {
   InType input = {100, 150, 200};
   IncreaseContrastTaskSEQ task(input);
 
@@ -89,7 +139,7 @@ TEST(IncreaseContrastProcessingTests, SeqPreProcessingReturnsTrue) {
   EXPECT_TRUE(task.PreProcessing());
 }
 
-TEST(IncreaseContrastProcessingTests, SeqPostProcessingReturnsTrue) {
+TEST(ShemetovDIncreaseContrastProcessingTests, SeqPostProcessingReturnsTrue) {
   InType input = {100, 150, 200};
   IncreaseContrastTaskSEQ task(input);
 
@@ -99,7 +149,7 @@ TEST(IncreaseContrastProcessingTests, SeqPostProcessingReturnsTrue) {
   EXPECT_TRUE(task.PostProcessing());
 }
 
-TEST(IncreaseContrastProcessingTests, MpiPreProcessingReturnsTrue) {
+TEST(ShemetovDIncreaseContrastProcessingTests, MpiPreProcessingReturnsTrue) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -110,7 +160,7 @@ TEST(IncreaseContrastProcessingTests, MpiPreProcessingReturnsTrue) {
   EXPECT_TRUE(task.PreProcessing());
 }
 
-TEST(IncreaseContrastProcessingTests, MpiPostProcessingReturnsTrue) {
+TEST(ShemetovDIncreaseContrastProcessingTests, MpiPostProcessingReturnsTrue) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -123,57 +173,7 @@ TEST(IncreaseContrastProcessingTests, MpiPostProcessingReturnsTrue) {
   EXPECT_TRUE(task.PostProcessing());
 }
 
-TEST_F(IncreaseContrastFunctionalTests, SeqFullCycle) {
-  IncreaseContrastTaskSEQ task(input_data);
-  ASSERT_TRUE(task.Validation());
-  ASSERT_TRUE(task.PreProcessing());
-  ASSERT_TRUE(task.Run());
-  ASSERT_TRUE(task.PostProcessing());
-  EXPECT_EQ(task.GetOutput(), expected_output);
-}
-
-TEST_F(IncreaseContrastFunctionalTests, MpiFullCycle) {
-  int rank = 0;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  IncreaseContrastTaskMPI task(input_data);
-  ASSERT_TRUE(task.Validation());
-  ASSERT_TRUE(task.PreProcessing());
-  ASSERT_TRUE(task.Run());
-  ASSERT_TRUE(task.PostProcessing());
-
-  if (rank == 0) {
-    EXPECT_EQ(task.GetOutput(), expected_output);
-  } else {
-    SUCCEED();
-  }
-}
-
-TEST_F(IncreaseContrastFunctionalTests, SeqRunOnly) {
-  IncreaseContrastTaskSEQ task(input_data);
-  ASSERT_TRUE(task.Validation());
-  ASSERT_TRUE(task.PreProcessing());
-  ASSERT_TRUE(task.Run());
-}
-
-TEST_F(IncreaseContrastFunctionalTests, MpiRunOnly) {
-  int rank = 0;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  IncreaseContrastTaskMPI task(input_data);
-
-  ASSERT_TRUE(task.Validation());
-  ASSERT_TRUE(task.PreProcessing());
-  ASSERT_TRUE(task.Run());
-
-  if (rank == 0) {
-    EXPECT_EQ(task.GetOutput(), expected_output);
-  } else {
-    SUCCEED();
-  }
-}
-
-TEST(IncreaseContrastEdgeCases, SeqZeroAndMax) {
+TEST(ShemetovDIncreaseContrastEdgeCases, SeqZeroAndMax) {
   InType zero_input(10, 0);
   InType max_input(10, 255);
 
@@ -198,7 +198,7 @@ TEST(IncreaseContrastEdgeCases, SeqZeroAndMax) {
   }
 }
 
-TEST(IncreaseContrastEdgeCases, MpiZeroAndMax) {
+TEST(ShemetovDIncreaseContrastEdgeCases, MpiZeroAndMax) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -228,7 +228,7 @@ TEST(IncreaseContrastEdgeCases, MpiZeroAndMax) {
   }
 }
 
-TEST(IncreaseContrastEdgeCases, SeqEmptyInput) {
+TEST(ShemetovDIncreaseContrastEdgeCases, SeqEmptyInput) {
   InType empty;
   IncreaseContrastTaskSEQ task(empty);
 
@@ -237,7 +237,7 @@ TEST(IncreaseContrastEdgeCases, SeqEmptyInput) {
   EXPECT_EQ(task.GetOutput().size(), static_cast<size_t>(0));
 }
 
-TEST(IncreaseContrastEdgeCases, MpiEmptyInput) {
+TEST(ShemetovDIncreaseContrastEdgeCases, MpiEmptyInput) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -252,7 +252,7 @@ TEST(IncreaseContrastEdgeCases, MpiEmptyInput) {
   }
 }
 
-TEST(IncreaseContrastEdgeCases, SeqSingleElement) {
+TEST(ShemetovDIncreaseContrastEdgeCases, SeqSingleElement) {
   InType data = {128};
   IncreaseContrastTaskSEQ task(data);
 
@@ -263,7 +263,7 @@ TEST(IncreaseContrastEdgeCases, SeqSingleElement) {
   EXPECT_EQ(task.GetOutput()[0], static_cast<uint8_t>(std::clamp(int(128 * 1.3F), 0, 255)));
 }
 
-TEST(IncreaseContrastEdgeCases, MpiSingleElement) {
+TEST(ShemetovDIncreaseContrastEdgeCases, MpiSingleElement) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -282,7 +282,7 @@ TEST(IncreaseContrastEdgeCases, MpiSingleElement) {
   }
 }
 
-TEST(IncreaseContrastEdgeCases, MpiUnevenSizes) {
+TEST(ShemetovDIncreaseContrastEdgeCases, MpiUnevenSizes) {
   int rank = 0;
   int size = 1;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -305,7 +305,7 @@ TEST(IncreaseContrastEdgeCases, MpiUnevenSizes) {
   }
 }
 
-TEST(IncreaseContrastEdgeCases, SeqClampBehavior) {
+TEST(ShemetovDIncreaseContrastEdgeCases, SeqClampBehavior) {
   InType low_values = {0, 1, 50, 100, 150, 200, 254, 255};
   IncreaseContrastTaskSEQ task(low_values);
 
@@ -322,7 +322,7 @@ TEST(IncreaseContrastEdgeCases, SeqClampBehavior) {
   EXPECT_EQ(task.GetOutput()[7], 255);
 }
 
-TEST(IncreaseContrastEdgeCases, MpiClampBehavior) {
+TEST(ShemetovDIncreaseContrastEdgeCases, MpiClampBehavior) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
