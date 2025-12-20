@@ -61,7 +61,7 @@ std::vector<uint8_t> GaussFilterMPI::SendColumns(const std::vector<std::vector<P
   const auto sc_size = static_cast<size_t>(local_rows) * 3;
   std::vector<uint8_t> send_columns(sc_size);
 
-  for (size_t i = 0; std::_Cmp_less(i, local_rows); ++i) {
+  for (size_t i = 0; std::cmp_less(i, local_rows); ++i) {
     send_columns[(i * 3)] = local_out[i][column].chennel_red;
     send_columns[(i * 3) + 1] = local_out[i][column].chennel_green;
     send_columns[(i * 3) + 2] = local_out[i][column].chennel_blue;
@@ -72,7 +72,7 @@ std::vector<uint8_t> GaussFilterMPI::SendColumns(const std::vector<std::vector<P
 
 void GaussFilterMPI::RecieveColumns(std::vector<uint8_t> &recieve_columns, size_t column,
                                     std::vector<std::vector<Pixel>> &out) {
-  for (size_t i = 0; std::_Cmp_less(i, height); ++i) {
+  for (size_t i = 0; std::cmp_less(i, height); ++i) {
     out[i][column].chennel_red = recieve_columns[(i * 3)];
     out[i][column].chennel_green = recieve_columns[(i * 3) + 1];
     out[i][column].chennel_blue = recieve_columns[(i * 3) + 2];
@@ -92,7 +92,7 @@ void GaussFilterMPI::GatherResult(const std::vector<std::vector<Pixel>> &local_o
     displacement[rank_idx] = displacement[rank_idx - 1] + string_count[rank_idx - 1];
   }
 
-  for (size_t j = 0; std::_Cmp_less(j, width); ++j) {
+  for (size_t j = 0; std::cmp_less(j, width); ++j) {
     auto send_columns = SendColumns(local_out, j);
 
     if (rank == 0) {
@@ -110,11 +110,11 @@ void GaussFilterMPI::GatherResult(const std::vector<std::vector<Pixel>> &local_o
   }
 
   if (rank == 0) {
-    for (size_t i = 0; std::_Cmp_less(i, height); ++i) {
+    for (size_t i = 0; std::cmp_less(i, height); ++i) {
       out[i][0] = in[i][0];
       out[i][width - 1] = in[i][width - 1];
     }
-    for (size_t j = 0; std::_Cmp_less(j, width); ++j) {
+    for (size_t j = 0; std::cmp_less(j, width); ++j) {
       out[0][j] = in[0][j];
       out[height - 1][j] = in[height - 1][j];
     }
