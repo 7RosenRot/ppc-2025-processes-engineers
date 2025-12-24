@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 #include "shemetov_d_increasing_contrast/common/include/common.hpp"
@@ -28,38 +29,50 @@ bool IncreaseContrastTaskMPI::PreProcessingImpl() {
 
 bool IncreaseContrastTaskMPI::RunImpl() {
   int rank = 0;
-  int size = 1;
+  int size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  const size_t total_size = GetInput().size();
+  const int total_size = GetInput().size();
 
-  std::vector<int> counts(size, static_cast<int>(total_size / size));
-  const int rest = static_cast<int>(total_size % size);
-  for (int i = 0; i < rest; ++i) {
-    counts[i]++;
+  std::vector<int> pixel_count(size, total_size / size);
+  for (size_t i = 0; std::cmp_less(i, total_size % size); ++i) {
+    pixel_count[i]++;
   }
 
-  std::vector<int> displs(size, 0);
+  std::vector<int> displacement(size, 0);
   for (int i = 1; i < size; ++i) {
-    displs[i] = displs[i - 1] + counts[i - 1];
+    displacement[i] = displacement[i - 1] + pixel_count[i - 1];
   }
 
-  std::vector<uint8_t> local_in(counts[rank]);
-  std::vector<uint8_t> local_out(counts[rank]);
+  std::vector<int> count_to_bytes(size);
+  std::vector<int> displacement_to_bytes(size);
 
-  MPI_Scatterv(GetInput().data(), counts.data(), displs.data(), MPI_UNSIGNED_CHAR, local_in.data(), counts[rank],
-               MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
+  for (int i = 0; i < size; ++i) {
+    count_to_bytes[i] = count_to_bytes[i] * static_cast<int>(sizeof(Pixel));
+    displacement_to_bytes[i] = displacement_to_bytes[i] * static_cast<int>(sizeof(Pixel));
+  }
+
+  std::vector<Pixel> local_input(pixel_count[rank]);
+  std::vector<Pixel> local_output(pixel_count[rank]);
+
+  MPI_Scatterv(GetInput().data(), count_to_bytes.data(), displacement_to_bytes.data(), MPI_BYTE, local_input.data(),
+               displacement_to_bytes[rank], MPI_BYTE, 0, MPI_COMM_WORLD);
 
   constexpr float kFactor = 1.3F;
 
-  for (size_t i = 0; i < local_in.size(); ++i) {
-    const int v = static_cast<int>(static_cast<float>(local_in[i]) * kFactor);
-    local_out[i] = static_cast<uint8_t>(std::clamp(v, 0, 255));
+  for (size_t i = 0; i < local_input.size(); ++i) {
+    const auto m_red = static_cast<float>(local_input[i].channel_red) * kFactor;
+    const auto m_green = static_cast<float>(local_input[i].channel_red) * kFactor;
+    const auto m_blue = static_cast<float>(local_input[i].channel_red) * kFactor;
+
+    local_output[i].channel_red = static_cast<uint8_t>(std::clamp(m_red, 0.F, 255.F));
+    local_output[i].channel_green = static_cast<uint8_t>(std::clamp(m_green, 0.F, 255.F));
+    local_output[i].channel_blue = static_cast<uint8_t>(std::clamp(m_blue, 0.F, 255.F));
   }
 
-  MPI_Gatherv(local_out.data(), counts[rank], MPI_UNSIGNED_CHAR, GetOutput().data(), counts.data(), displs.data(),
-              MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
+  MPI_Gatherv(local_output.data(), count_to_bytes[rank], MPI_BYTE, GetOutput().data(), count_to_bytes.data(),
+              displacement_to_bytes.data(), MPI_BYTE, 0, MPI_COMM_WORLD);
 
   MPI_Barrier(MPI_COMM_WORLD);
   return true;
