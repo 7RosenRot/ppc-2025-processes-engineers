@@ -33,31 +33,31 @@ bool IncreaseContrastTaskMPI::RunImpl() {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  const int total_size = GetInput().size();
+  const size_t total_size = GetInput().size();
 
-  std::vector<int> pixel_count(size, total_size / size);
-  for (size_t i = 0; std::cmp_less(i, total_size % size); ++i) {
-    pixel_count[i]++;
+  std::vector<int> count(size, static_cast<int>(total_size / size));
+  for (size_t i = 0; std::cmp_less(i, static_cast<int>(total_size % size)); ++i) {
+    count[i]++;
   }
 
   std::vector<int> displacement(size, 0);
   for (int i = 1; i < size; ++i) {
-    displacement[i] = displacement[i - 1] + pixel_count[i - 1];
+    displacement[i] = displacement[i - 1] + count[i - 1];
   }
 
   std::vector<int> count_to_bytes(size);
   std::vector<int> displacement_to_bytes(size);
 
   for (int i = 0; i < size; ++i) {
-    count_to_bytes[i] = count_to_bytes[i] * static_cast<int>(sizeof(Pixel));
-    displacement_to_bytes[i] = displacement_to_bytes[i] * static_cast<int>(sizeof(Pixel));
+    count_to_bytes[i] = count[i] * static_cast<int>(sizeof(Pixel));
+    displacement_to_bytes[i] = displacement[i] * static_cast<int>(sizeof(Pixel));
   }
 
-  std::vector<Pixel> local_input(pixel_count[rank]);
-  std::vector<Pixel> local_output(pixel_count[rank]);
+  std::vector<Pixel> local_input(count[rank]);
+  std::vector<Pixel> local_output(count[rank]);
 
   MPI_Scatterv(GetInput().data(), count_to_bytes.data(), displacement_to_bytes.data(), MPI_BYTE, local_input.data(),
-               displacement_to_bytes[rank], MPI_BYTE, 0, MPI_COMM_WORLD);
+               count_to_bytes[rank], MPI_BYTE, 0, MPI_COMM_WORLD);
 
   constexpr float kFactor = 1.3F;
 

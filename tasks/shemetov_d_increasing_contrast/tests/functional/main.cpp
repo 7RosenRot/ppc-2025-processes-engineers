@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <string>
 #include <tuple>
-#include <vector>
 
 #include "shemetov_d_increasing_contrast/common/include/common.hpp"
 #include "shemetov_d_increasing_contrast/mpi/include/ops_mpi.hpp"
@@ -96,7 +95,7 @@ TEST(ShemetovDIncreaseContrastFunctionalExtraTests, SinglePixelMPI) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  Pixel m_pixel = {.channel_red = 100, .channel_green = 150, .channel_blue = 200};
+  Pixel m_pixel = {.channel_red = 100, .channel_green = 100, .channel_blue = 100};
   InType input = {m_pixel};
 
   IncreaseContrastTaskMPI task(input);
@@ -106,16 +105,11 @@ TEST(ShemetovDIncreaseContrastFunctionalExtraTests, SinglePixelMPI) {
   ASSERT_TRUE(task.PostProcessing());
 
   if (rank == 0) {
-    const auto &out = task.GetOutput()[0];
+    const OutType &out = task.GetOutput();
 
-    EXPECT_GE(out.channel_red, 0);
-    EXPECT_LE(out.channel_red, 255);
-
-    EXPECT_GE(out.channel_green, 0);
-    EXPECT_LE(out.channel_green, 255);
-
-    EXPECT_GE(out.channel_blue, 0);
-    EXPECT_LE(out.channel_blue, 255);
+    EXPECT_EQ(out[0].channel_red, 130);
+    EXPECT_EQ(out[0].channel_green, 130);
+    EXPECT_EQ(out[0].channel_blue, 130);
   }
 }
 
